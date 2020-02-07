@@ -1,0 +1,10 @@
+#package_prefix: i18n
+#source_tmx_directory: translation/source
+#target_tmx_directory: translation/target
+#translations_directory: lib/src/translation
+#default_language: en_US
+target_languages:
+  - en_gb
+  - en-CA
+  - en_IN
+
