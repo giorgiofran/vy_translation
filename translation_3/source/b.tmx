@@ -1,0 +1,30 @@
+<?xml version="1.0" ?>
+<tmx version="1.1">
+	<header
+		creationtool="XYZTool"
+		creationtoolversion="1.01-023"
+		datatype="PlainText"
+		segtype="sentence"
+		adminlang="en-us"
+		srclang="EN"
+		o-tmf="OmegaT TMX">
+	</header>
+	<body>
+		<tu tuid="hello" datatype="plaintext">
+			<tuv xml:lang="en">
+				<seg>hello</seg>
+			</tuv>
+			<tuv xml:lang="it">
+				<seg>ciao</seg>
+			</tuv>
+		</tu>
+		<tu tuid="world" datatype="plaintext">
+			<tuv xml:lang="en-us">
+				<seg>world</seg>
+			</tuv>
+			<tuv xml:lang="it-it">
+				<seg>mondo</seg>
+			</tuv>
+		</tu>
+	</body>
+</tmx>

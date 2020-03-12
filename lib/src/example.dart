@@ -2,17 +2,17 @@
 /// Copyright © 2016 Vidya sas. All rights reserved.
 /// Created by Giorgio on 04/11/2017.
 
-import 'package:vidya_base/translation/translation_en.dart'
+import 'package:vidya_base/translation_3/translation_en.dart'
     as def_translations_en;
-import 'package:vidya_base/translation/translation_en_us.dart'
+import 'package:vidya_base/translation_3/translation_en_us.dart'
     deferred as def_translations_en_US;
-import 'package:vidya_base/translation/translation_it.dart'
+import 'package:vidya_base/translation_3/translation_it.dart'
     deferred as def_translations_it;
-import 'package:vidya_base/translation/translation_it_it.dart'
+import 'package:vidya_base/translation_3/translation_it_it.dart'
     deferred as def_translations_it_IT;
-import 'package:vidya_base/translation/translation_pt.dart'
+import 'package:vidya_base/translation_3/translation_pt.dart'
     deferred as def_translations_pt;
-import 'package:vidya_base/translation/translation_pt_br.dart'
+import 'package:vidya_base/translation_3/translation_pt_br.dart'
     deferred as def_translations_pt_BR;
 import 'package:vidya_base/vidya_base.dart' show Locker;
 import 'package:vidya_base/vidya_base.dart';

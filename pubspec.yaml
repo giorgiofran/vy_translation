@@ -1,25 +1,31 @@
 name: vy_translation
 description: A way to manage message translations even from other packages (that use vy_translation ...)
 version: 0.2.0
-# homepage: https://www.example.com
-author: giorgio <giorgiofran@gmail.com>
+homepage: https://github.com/giorgiofran/vy_translation
 
 environment:
-  sdk: '>=2.5.0 <3.0.0'
+  sdk: '>=2.7.1 <3.0.0'
 
 dependencies:
   yaml: any
   xml: any
   recase: any
+  quiver: any
+  dart_style: any
   vy_lock: #^1.6.0
     git:
       url: "https://github.com/giorgiofran/vy_lock"
     #path: ../../git/vy_lock
 
-  vy_language_tag:
+  vy_language_tag: ^0.1.3
+
+  vy_analyzer_utils:
     git:
-      url: "https://github.com/giorgiofran/vy_language_tag"
-    #path: ../../git/vy_language_tag
+      url: "https://github.com/giorgiofran/vy_analyzer_utils"
+
+  vy_dart_meme:
+    git:
+      url: "https://github.com/giorgiofran/vy_dart_meme"
 
 dev_dependencies:
   pedantic: 1.8.0

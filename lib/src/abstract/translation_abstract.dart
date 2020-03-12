@@ -6,17 +6,20 @@ typedef checkModuleFn = Future Function(LanguageTag);
 typedef getTranslationMapFn = Map<String, String> Function(LanguageTag);
 
 abstract class TranslationAbstract {
-  static const String _parmLanguageTag = 'language';
   static checkModuleFn _checkModule;
   static getTranslationMapFn _getTranslationMap;
   static get isInitialized =>
       _checkModule != null && _getTranslationMap != null;
-  static LanguageTag _defaultLanguageTag = LanguageTag.parse('en_US');
-  //static TranslationAbstract _singleton;
-  static List<String> _openedLanguages = <String>[];
+
   static final log = Logger('TranslationAbstract');
 
-  TranslationAbstract();
+  static LanguageTag _defaultLanguageTag;
+  static List<String> _openedLanguages = <String>[];
+
+  TranslationAbstract(LanguageTag defaultLanguage) {
+    _defaultLanguageTag = defaultLanguage;
+    addOpenedLanguageTag(defaultLanguage);
+  }
 
   Mutex lock = Mutex();
 
@@ -60,23 +63,6 @@ abstract class TranslationAbstract {
   ///
   /// If the language tag is not managed returns null
   Map<String, String> getTranslationMap(LanguageTag languageTag);
-/*
-  Future<T> _checkModuleSecured<T>(LanguageTag languageTag) async {
-    Future<T> _recall<T>(Map<dynamic, dynamic> values) =>
-        _checkModuleSecured<T>(values[_parmLanguageTag]);
-
-    if (sideListLocker.locked) {
-      return sideListLocker.waitLock<T>({_parmLanguageTag: languageTag});
-    }
-    sideListLocker.setFunction(_recall);
-    sideListLocker.lock();
-    try {
-      await _checkModule(languageTag);
-    } finally {
-      sideListLocker.unlock();
-    }
-    return null;
-  }*/
 
   Future<void> _checkModuleSecured(LanguageTag languageTag) async {
     await lock.mutex(() async {
@@ -99,7 +85,7 @@ abstract class TranslationAbstract {
     languageTag ??= _defaultLanguageTag;
 
     if (!isLanguageOpen(languageTag)) {
-      log.warning('Language "${languageTag.code}" has not been opened yet.'
+      log.warning('Language "${languageTag.code}" has not been opened yet. '
           'Using default language "en_US".');
       languageTag = LanguageTag('en', region: 'US');
     }
