@@ -8,12 +8,12 @@ const String test4 =
     '''Two message definition with the same id "%0" but different text have been detected. They come from the following sources:\n- %1\n- %2''';
 
 void main() {
-  StringBuffer buffer = StringBuffer();
+  var buffer = StringBuffer();
 
   buffer.writeln(test4);
-  String content = buffer.toString();
+  var content = buffer.toString();
 
-  print("$content");
-  String result = content.replaceAll('%1', 'replaced!');
+  print('$content');
+  var result = content.replaceAll('%1', 'replaced!');
   print(result);
 }

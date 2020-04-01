@@ -15,14 +15,16 @@ class AnnotationRetriever extends GeneralizingAstVisitor<void>
   @override
   void visitAnnotation(Annotation visitAnnotation) {
     if (visitAnnotation.name.name == 'MessageDefinition') {
-      MessageDefinition md = generateMessageDefinition(visitAnnotation);
+      MessageDefinition md;
+      md = generateMessageDefinition(visitAnnotation);
       addToStore(md, sourcePath);
     }
     super.visitAnnotation(visitAnnotation);
   }
 
   MessageDefinition generateMessageDefinition(Annotation visitAnnotation) {
-    DartObject dartObject = visitAnnotation.elementAnnotation.constantValue;
+    DartObject dartObject;
+    dartObject = visitAnnotation.elementAnnotation.constantValue;
     String id = dartConstObjectField(dartObject, 'id');
 
     String text = dartConstObjectField(dartObject, 'text');
@@ -35,59 +37,44 @@ class AnnotationRetriever extends GeneralizingAstVisitor<void>
         description: description, exampleValues: exampleValues);
   }
 
-  @MessageDefinition(
-      '0001',
-      'Two message definition with id "%0" and text "%1" have a different '
-          'description.\nThey come from the following sources:\n- %2\n- %3\n'
-          'Only the first is maintained')
-  @MessageDefinition(
-      '0002',
-      'Two message definition with id "%0" and text "%1" have a different '
-          'list of example values.\n'
-          'They come from the following sources:\n- %2\n- %3\n'
-          'Only the first is maintained')
-  @MessageDefinition(
-      '0003',
-      'Two message definition with the same id "%0" but different '
-          'text have been detected.\n'
-          'They come from the following sources:\n- %1\n- %2')
-  @MessageDefinition(
-      '0004', 'The message with id "%0" and text "%1" has been processed.')
   void addToStore(MessageDefinition definition, String sourcePath) {
-    String key = '${parms.packagePrefix}.${definition.id}';
+    var key = '${parms.packagePrefix}.${definition.id}';
     if (store.containsKey(key)) {
-      MessageStore storeMessage = store[key];
+      MessageStore storeMessage;
+      storeMessage = store[key];
       if (definition != storeMessage.definition) {
         if (definition.id == storeMessage.definition.id &&
             definition.text == storeMessage.definition.text) {
           if (definition.description != storeMessage.definition.description) {
-            log.warning(finder.get('0001', values: [
-              storeMessage.definition.id,
-              storeMessage.definition.text,
-              storeMessage.sourcePath,
-              sourcePath
-            ]));
+            log.warning('Two message definition with id '
+                '"${storeMessage.definition.id}" and text '
+                '"${storeMessage.definition.text}" have a different '
+                'description.\nThey come from the following sources:\n'
+                '- ${storeMessage.sourcePath}\n- ${sourcePath}\n'
+                'Only the first is maintained');
           } else {
-            log.warning(finder.get('0002', values: [
-              storeMessage.definition.id,
-              storeMessage.definition.text,
-              storeMessage.sourcePath,
-              sourcePath
-            ]));
+            log.warning(
+                'Two message definition with id "${storeMessage.definition.id}" '
+                'and text "${storeMessage.definition.text}" have a different '
+                'list of example values.\n'
+                'They come from the following sources:\n'
+                '- ${storeMessage.sourcePath}\n- $sourcePath\n'
+                'Only the first is maintained');
           }
         } else {
           errorsReported = true;
-          log.severe(finder.get('0003', values: [
-            storeMessage.definition.id,
-            storeMessage.sourcePath,
-            sourcePath
-          ]));
+          log.severe('Two message definition with the same id '
+              '"${storeMessage.definition.id}" but different '
+              'text have been detected.\n'
+              'They come from the following sources:\n'
+              '- ${storeMessage.sourcePath}\n- $sourcePath');
         }
       }
     } else {
       store[key] = MessageStore(key, sourcePath, definition);
       if (log.level <= Level.FINE) {
-        log.fine(finder.get('0004', values: [key, definition.text]));
+        log.fine('The message with id "$key" and text "${definition.text}" '
+            'has been processed.');
       }
     }
   }

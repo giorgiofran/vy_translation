@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:dart_style/dart_style.dart';
 import 'package:recase/recase.dart';
 import 'package:vy_language_tag/vy_language_tag.dart';
 
@@ -13,10 +14,8 @@ import 'package:vy_translation/src/abstract/translation_abstract.dart';
 const String baseDeferred = '    deferred as def_translations_';
 
 const String initTrFinder = '''
-void initTranslationFinder() {
-  final TranslationFinder finder = TranslationFinder._();
-  finder.setPackageMethod(finder.checkModule, finder.getTranslationMap);
-}
+void initTranslationFinder() => TranslationFinder._()
+    .setPackageMethod(finder.checkModule, finder.getTranslationMap);
 ''';
 const String defFinder =
     'TranslationFinder get finder => TranslationFinder();\n';
@@ -86,19 +85,21 @@ const String defGet = r'''
 const String closeClassDef = '}';
 
 Future<void> generateTranslationFinderClass(Parameters parms) async {
-  Directory directory = parms.translationDirectory;
-  File targetFile = File('${directory.path}/translation_finder.dart');
-  bool exists = await targetFile.exists();
+  final _dartFmt = DartFormatter();
+
+  var directory = parms.translationDirectory;
+  var targetFile = File('${directory.path}/translation_finder.dart');
+  var exists = await targetFile.exists();
   if (exists) {
     await targetFile.delete();
   }
   await targetFile.create(recursive: true);
 
-  StringBuffer buffer = StringBuffer();
+  var buffer = StringBuffer();
   buffer.writeln('');
   buffer.writeln(genericImports);
   writeLanguageImport(buffer, parms.defaultLanguage, isDefault: true);
-  for (LanguageTag languageTag in parms.targetLanguages) {
+  for (var languageTag in parms.targetLanguages) {
     writeLanguageImport(buffer, languageTag);
   }
   buffer.writeln('');
@@ -110,7 +111,7 @@ Future<void> generateTranslationFinderClass(Parameters parms) async {
   buffer.writeln(defFactory);
   buffer.writeln(
       defInitCheckModule.replaceFirst('%0', parms.defaultLanguage.posixCode));
-  for (LanguageTag languageTag in parms.targetLanguages) {
+  for (var languageTag in parms.targetLanguages) {
     buffer.writeln(defLanguageCheckModule
         .replaceAll('%0', languageTag.posixCode)
         .replaceAll('%1', languageTag.lowercasePosix));
@@ -118,7 +119,7 @@ Future<void> generateTranslationFinderClass(Parameters parms) async {
   buffer.writeln(defEndCheckModule);
   buffer.writeln(defInitTranslationMap.replaceFirst(
       '%0', parms.defaultLanguage.posixCode));
-  for (LanguageTag languageTag in parms.targetLanguages) {
+  for (var languageTag in parms.targetLanguages) {
     buffer.writeln(defLanguageTranslationMap
         .replaceAll('%0', languageTag.posixCode)
         .replaceAll('%1', languageTag.lowercasePosix)
@@ -127,7 +128,7 @@ Future<void> generateTranslationFinderClass(Parameters parms) async {
   buffer.writeln(defEndTranslationMap);
   buffer.writeln(defGet.replaceAll('%0', parms.packagePrefix));
   buffer.writeln(closeClassDef);
-  await targetFile.writeAsString(buffer.toString());
+  await targetFile.writeAsString(_dartFmt.format('$buffer'));
 }
 
 void writeLanguageImport(StringBuffer buffer, LanguageTag languageTag,

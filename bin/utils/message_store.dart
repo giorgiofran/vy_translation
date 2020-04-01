@@ -15,11 +15,13 @@ class MessageStore {
 
   const MessageStore(this.key, this.sourcePath, this.definition);
 
+  @override
   bool operator ==(other) =>
       other is MessageStore &&
       key == other.key &&
       sourcePath == other.sourcePath &&
       definition == other.definition;
 
+  @override
   int get hashCode => hashObjects(['$key#$sourcePath', definition]);
 }

@@ -1,42 +1,40 @@
-/*import 'dart:io';
+import 'dart:io';
+import 'package:dart_style/dart_style.dart';
 import 'package:recase/recase.dart';
 import 'package:vy_language_tag/vy_language_tag.dart';
 import 'package:vy_string_utils/vy_string_utils.dart';
 
-import '../utils/configuration_parameters.dart';
-import '../utils/message_store.dart';
-
-
-Future<void> generateDefaultLanguageMap(
-    Parameters parms, Iterable<MessageStore> store) async {
-  var directory = parms.translationDirectory;
-
-  var targetFile = File(
-      '${directory.path}/translation_${parms.defaultLanguage.lowercasePosix}.dart');
+Future<void> generateLanguageMapFile(
+    File file, LanguageTag languageTag, Map<String, String> languageMap) async {
+  final _dartFmt = DartFormatter();
+  var targetFile = file;
 
   var exists = await targetFile.exists();
   if (!exists) {
     await targetFile.create(recursive: true);
   }
-  String content; content = await prepareDefaultMapFileContent(store);
-  await targetFile.writeAsString('\nMap<String, String> translations'
-      '${ReCase(parms.defaultLanguage.lowercaseCode).pascalCase} '
-      '= <String, String>{\n');
-  await targetFile.writeAsString(content, mode: FileMode.append);
-  await targetFile.writeAsString('};\n', mode: FileMode.append);
+  var buffer = StringBuffer()
+    ..write("import 'dart:collection';\n")
+    ..write(
+        'Map<String, String> translations${ReCase(languageTag.lowercaseCode).pascalCase} =')
+    ..writeln('  SplayTreeMap<String, String>()..addAll(<String, String>{');
+  String content;
+  content = await stringifyMapContent(languageMap);
+  buffer.write(content);
+  buffer.writeln('});');
+
+  await targetFile.writeAsString(_dartFmt.format('$buffer'));
 }
 
 // The file must have been created already
-Future<String> prepareDefaultMapFileContent(
-    Iterable<MessageStore> store) async {
+String stringifyMapContent(Map<String, String> languageMap) {
   var buffer = StringBuffer();
   String text;
   List<String> parts;
   bool containsSingle, containsDouble;
-  MessageStore message;
-  for (message in store) {
-    text = message.definition.text.replaceAll(RegExp(r'[\r]?\n'), r'\n');
-    var keyString = "  '${message.key}': ";
+  for (var id in languageMap.keys) {
+    text = languageMap[id].replaceAll(RegExp(r'[\r]?\n'), r'\n');
+    var keyString = "  '$id': ";
     buffer.write(keyString);
     parts = splitInLines(text, 74, firstLineDecrease: keyString.length - 4);
     for (var part in parts) {
@@ -64,12 +62,6 @@ Future<String> prepareDefaultMapFileContent(
         buffer.writeln('');
       }
     }
-    */
-/* buffer.writeln("  '${message.key}': "
-        "'''${message.definition.text.replaceAll(RegExp(r'[\r]?\n'), r'\n')}"
-        "''',");*//*
-
   }
   return '$buffer';
 }
-*/

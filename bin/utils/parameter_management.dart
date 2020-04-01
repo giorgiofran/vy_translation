@@ -12,16 +12,16 @@ const String keyDefaultLanguage = 'default_language';
 const String keyTargetLanguages = 'target_languages';
 
 Parameters extractYamlValues(Map yamlMap, Directory current, String projectName) {
-  Parameters parms = Parameters();
+  var parms = Parameters();
 
   parms.packagePrefix = getStringParm(
       keyPackagePrefix, yamlMap, current, projectName);
 
   parms.memoryDirectory = getDirectoryParm(
-      keyMemoryDirectory, yamlMap, current, 'translation_memory');
+      keyMemoryDirectory, yamlMap, current, 'vy_translation/memory');
 
   parms.translationDirectory = getDirectoryParm(
-      keyTranslationDirectory, yamlMap, current, 'lib/src/translation_1');
+      keyTranslationDirectory, yamlMap, current, 'lib/src/translation');
 
   parms.defaultLanguage = getLanguageTagParm(
       keyDefaultLanguage, yamlMap, current, LanguageTag('en', region: 'US'));
@@ -66,7 +66,7 @@ Directory getDirectoryParm(String parmName, Map parmMap,
         'The "$parmName" parameter cannot be of type "${value.runtimeType}"');
   }
 
-  bool dirExists = dir.existsSync();
+  var dirExists = dir.existsSync();
   if (!dirExists) {
     dir.createSync(recursive: true);
     logFolderCreated(dir);
@@ -95,7 +95,7 @@ LanguageTag getLanguageTagParm(String parmName, Map parmMap,
 
 Set<LanguageTag> getLanguageTagParmList(
     String parmName, Map parmMap, Directory currentDirectory) {
-  Set<LanguageTag> defaultsTo = <LanguageTag>{};
+  var defaultsTo = <LanguageTag>{};
   dynamic value = parmMap[parmName];
   Set<LanguageTag> tag;
   if (value == null) {

@@ -18,8 +18,8 @@ import 'package:vy_analyzer_utils/vy_analyzer_utils.dart'
 import 'package:yaml/yaml.dart';
 
 String formatTimeRef(DateTime time) {
-  String timeString = time.toIso8601String().replaceAll('T', ' ');
-  int dotIndex = timeString.indexOf('.');
+  var timeString = time.toIso8601String().replaceAll('T', ' ');
+  var dotIndex = timeString.indexOf('.');
   return timeString.substring(0, dotIndex);
 }
 
@@ -29,26 +29,24 @@ Future<void> main(List<String> args) async {
     print(
         '${record.level.name}: ${formatTimeRef(record.time)}: ${record.message}');
   });
-  AnalysisContextCollection collection =
-      getAnalysisContextCollection(Directory.current);
+  AnalysisContextCollection collection;
+  collection = getAnalysisContextCollection(Directory.current);
 /*  analyzeSomeFiles(collection, [
     '/home/giorgio/dart-projects/git/vy_translation/lib/src/abstract/translation_abstract.dart'
   ]);*/
 
   //analyzeAllFiles(collection);
 
-
   //await executeDsa(Directory.current);
   try {
-    Directory current = Directory.current;
-    File yamlFile = File('${current.path}/vy_translation.yaml');
-    bool existsYaml = yamlFile.existsSync();
+    var current = Directory.current;
+    var yamlFile = File('${current.path}/vy_translation.yaml');
+    var existsYaml = yamlFile.existsSync();
     if (!existsYaml) {
       throw StateError(
           'Missing file "vy_translation.yaml" in project directory (${current.path})');
     }
-    List<String> data = yamlFile.readAsLinesSync();
-    YamlMap doc = loadYaml(data.join('\n'));
+    YamlMap doc = loadYaml(await yamlFile.readAsString());
     // if .yaml file is empty, loadYaml() returns null;
     /*Parameters parms =*/ //extractYamlValues(doc ?? {}, current);
     await executeDsa(Directory.current);
@@ -60,43 +58,52 @@ Future<void> main(List<String> args) async {
 }
 
 Future<void> executeDsa(Directory dir) async {
-  DartSourceAnalysis dsa = DartSourceAnalysis(AnnotationRetriever(),
+  var dsa = DartSourceAnalysis(AnnotationRetriever(),
       resolvedAnalysis: true, dir: dir);
   await dsa.run();
 }
 
-analyzeSomeFiles(
+void analyzeSomeFiles(
     AnalysisContextCollection collection, List<String> includedPaths) async {
-  for (String path in includedPaths) {
-    AnalysisContext context = collection.contextFor(path);
+  String path;
+  AnalysisContext context;
+  for (path in includedPaths) {
+    context = collection.contextFor(path);
     await analyzeSingleFile(context, path);
   }
 }
 
 Future<void> analyzeAllFiles(AnalysisContextCollection collection) async {
-  for (AnalysisContext context in collection.contexts) {
-    for (String path in context.contextRoot.analyzedFiles()) {
+  AnalysisContext context;
+  for (context in collection.contexts) {
+    String path;
+    for (path in context.contextRoot.analyzedFiles()) {
       await analyzeSingleFile(context, path);
     }
   }
 }
 
-analyzeSingleFile(AnalysisContext context, String path) async {
-  AnalysisSession session = context.currentSession;
+void analyzeSingleFile(AnalysisContext context, String path) async {
+  AnalysisSession session;
+  session = context.currentSession;
   //processUnresolvedFile(session, path);
   await processResolvedFile(session, path);
 }
 
 /// Unresolved AST
-processUnresolvedFile(AnalysisSession session, String path) {
-  ParsedUnitResult result = session.getParsedUnit(path);
-  CompilationUnit unit = result.unit;
+void processUnresolvedFile(AnalysisSession session, String path) {
+  ParsedUnitResult result;
+  result = session.getParsedUnit(path);
+  CompilationUnit unit;
+  unit = result.unit;
 }
 
 /// Resolved AST
-processResolvedFile(AnalysisSession session, String path) async {
-  ResolvedUnitResult result = await session.getResolvedUnit(path);
-  CompilationUnit unit = result.unit;
+void processResolvedFile(AnalysisSession session, String path) async {
+  ResolvedUnitResult result;
+  result = await session.getResolvedUnit(path);
+  CompilationUnit unit;
+  unit = result.unit;
   unit.accept<void>(AnnotationRetriever());
 }
 

@@ -1,6 +1,8 @@
 import 'package:vy_language_tag/vy_language_tag.dart';
 import 'package:vy_lock/vy_lock.dart' show Mutex;
 import 'package:logging/logging.dart';
+import 'package:vy_translation/src/annotation/message_definition.dart';
+import 'package:vy_translation/src/translation/translation_finder.dart';
 
 typedef checkModuleFn = Future Function(LanguageTag);
 typedef getTranslationMapFn = Map<String, String> Function(LanguageTag);
@@ -8,13 +10,13 @@ typedef getTranslationMapFn = Map<String, String> Function(LanguageTag);
 abstract class TranslationAbstract {
   static checkModuleFn _checkModule;
   static getTranslationMapFn _getTranslationMap;
-  static get isInitialized =>
+  static bool get isInitialized =>
       _checkModule != null && _getTranslationMap != null;
 
   static final log = Logger('TranslationAbstract');
 
   static LanguageTag _defaultLanguageTag;
-  static List<String> _openedLanguages = <String>[];
+  static final List<String> _openedLanguages = <String>[];
 
   TranslationAbstract(LanguageTag defaultLanguage) {
     _defaultLanguageTag = defaultLanguage;
@@ -30,9 +32,8 @@ abstract class TranslationAbstract {
         'Tag added to opened list: ${isLanguageOpen(languageTag)}');
   }
 
-  Future<void> initTranslationLanguage(LanguageTag languageTag) async {
-    await _checkModuleSecured(languageTag);
-  }
+  Future<void> initTranslationLanguage(LanguageTag languageTag) async =>
+      await _checkModuleSecured(languageTag);
 
   bool isLanguageOpen(LanguageTag languageTag) =>
       _openedLanguages.contains(languageTag.posixCode);
@@ -76,17 +77,16 @@ abstract class TranslationAbstract {
     return get(tag, languageTag: languageTag, values: values);
   }
 
-  @Deprecated('use get() instead')
-  String retrieveOpenTranslation(String tag,
-          {LanguageTag languageTag, List<String> values}) =>
-      get(tag, languageTag: languageTag, values: values);
-
+  @MessageDefinition('0002',
+      'Language "%0" has not been opened yet. Using default language "en_US".',
+      exampleValues: ['it_IT'],
+      description: 'Before calling a translated message, the relative language '
+          'must be initiated. When this happens the default language is used.')
   String get(String tag, {LanguageTag languageTag, List<String> values}) {
     languageTag ??= _defaultLanguageTag;
 
     if (!isLanguageOpen(languageTag)) {
-      log.warning('Language "${languageTag.code}" has not been opened yet. '
-          'Using default language "en_US".');
+      log.warning(finder.get('0002', values: [languageTag.code]));
       languageTag = LanguageTag('en', region: 'US');
     }
 
@@ -96,7 +96,8 @@ abstract class TranslationAbstract {
       returnMessage = translationMap[tag];
     }
     if (returnMessage == null) {
-      LanguageTag retry = languageTag;
+      LanguageTag retry;
+      retry = languageTag;
       while (retry.canBeTruncated) {
         retry = retry.truncated;
         translationMap = _getTranslationMap(retry);
@@ -119,7 +120,7 @@ abstract class TranslationAbstract {
     if (values == null || values.isEmpty) {
       return returnMessage;
     }
-    return _mergeMessage(returnMessage, values);
+    return _mergeMessage(returnMessage, values, languageTag);
   }
 
   /// Receive a message String and inject values, if any
@@ -129,19 +130,26 @@ abstract class TranslationAbstract {
   /// (already converted into String)
   /// The placeholder %0 is the first element of the list,
   /// the %1 is the second, and so on.
-  String _mergeMessage(String message, List<String> values) {
+  String _mergeMessage(
+      String message, List<String> values, LanguageTag languageTag) {
     if (message == null) {
       return '';
     }
     if (values == null || values.isEmpty) {
       return message;
     }
+    @MessageDefinition(
+        '0001', 'The placeholder "%%0" in message "%1" has not been found.',
+        exampleValues: ['2', 'File %0 in folder %1'],
+        description: 'The message evidentiate when a value is passed '
+            'but no placeholder has been found to use it.\nThis could be caused '
+            'by a wrong message or a wrong list of values in the call')
     String ret, check = message;
-    for (int idx = 0; idx < values.length; idx++) {
+    for (var idx = 0; idx < values.length; idx++) {
       ret = check.replaceAll('%$idx', values[idx]);
       if (ret == check) {
-        throw ArgumentError(
-            'The placeholder "%$idx" in message "$message" has not been found.');
+        throw ArgumentError(finder.get('0001',
+            languageTag: languageTag, values: ['$idx', '$message']));
       }
       check = ret;
     }

@@ -5,6 +5,7 @@ import 'dart:collection';
 import 'dart:io';
 import 'package:vy_analyzer_utils/vy_analyzer_utils.dart'
     show DartSourceAnalysis;
+import 'package:vy_dart_meme/vy_dart_meme.dart';
 import 'package:vy_translation/src/annotation/message_definition.dart';
 import 'package:vy_translation/src/translation/translation_finder.dart';
 
@@ -35,7 +36,7 @@ const keyName = 'name';
 // ********* M A I N *********
 // ***************************
 Future<void> main(List<String> args) async {
-  initTranslationFinder();
+  //initTranslationFinder();
 
   Logger.root.level = Level.WARNING;
   Logger.root.onRecord.listen((record) {
@@ -45,8 +46,9 @@ Future<void> main(List<String> args) async {
 
   try {
     // Create parameter structure and parses arguments
-    ArgResults argResults = parseArguments(args);
+    var argResults = parseArguments(args);
     if (argResults == null) {
+      // Error message already logged in the parseArguments() method
       exit(1);
     } else if (argResults[parmHelp]) {
       return;
@@ -58,9 +60,9 @@ Future<void> main(List<String> args) async {
 
     // *************************
     // loads pubspec.yaml
-    Directory current = Directory.current;
-    File pubspecFile = File('${current.path}/pubspec.yaml');
-    bool existsPubspec = await pubspecFile.exists();
+    var current = Directory.current;
+    var pubspecFile = File('${current.path}/pubspec.yaml');
+    var existsPubspec = await pubspecFile.exists();
     if (!existsPubspec) {
       throw StateError('The directory ${current.path} is not a dart project. '
           '(missing file "pubspec.yaml")');
@@ -75,7 +77,7 @@ Future<void> main(List<String> args) async {
     // *************************
     // loads vy_translation.yaml
     var yamlFile = File('${current.path}/vy_translation.yaml');
-    bool existsYaml = await yamlFile.exists();
+    var existsYaml = await yamlFile.exists();
     if (!existsYaml) {
       throw StateError('Missing file "vy_translation.yaml" in '
           'project directory (${current.path})');
@@ -83,18 +85,16 @@ Future<void> main(List<String> args) async {
     YamlMap doc = loadYaml(await yamlFile.readAsString());
     // if .yaml file is empty, loadYaml() returns null;
     parms = extractYamlValues(doc ?? {}, current, projectName);
-    await finder.setDefaultLanguage(parms.defaultLanguage);
-
-    // ***** Generate empty files
-    await generateMapFiles(parms, clean: argResults[parmClean]);
-    await generateTranslationFinderClass(parms);
+    //await finder.setDefaultLanguage(parms.defaultLanguage);
 
     await scanMessages(current);
     if (errorsReported) {
       exit(1);
     }
-    await generateDefaultLanguageMap(parms, store.values);
-    await generateMemeFile(parms, store.values);
+    var meme = await generateMemeFile(parms, store.values);
+
+    await generateMapFiles(parms, meme);
+    await generateTranslationFinderClass(parms);
   } catch (e, stack) {
     log.severe('$e\n$stack');
     exit(1);
@@ -103,7 +103,7 @@ Future<void> main(List<String> args) async {
 }
 
 Future<void> scanMessages(Directory project) async {
-  DartSourceAnalysis sourceAnalysis = DartSourceAnalysis(AnnotationRetriever(),
+  var sourceAnalysis = DartSourceAnalysis(AnnotationRetriever(),
       resolvedAnalysis: true, dir: project);
   await sourceAnalysis.run();
 }
