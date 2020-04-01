@@ -5,16 +5,11 @@ import 'dart:collection';
 import 'dart:io';
 import 'package:vy_analyzer_utils/vy_analyzer_utils.dart'
     show DartSourceAnalysis;
-import 'package:vy_dart_meme/vy_dart_meme.dart';
-import 'package:vy_translation/src/annotation/message_definition.dart';
-import 'package:vy_translation/src/translation/translation_finder.dart';
 
 import 'package:yaml/yaml.dart';
 import 'package:logging/logging.dart';
-import 'package:args/args.dart' show ArgResults;
 import 'package:vy_string_utils/vy_string_utils.dart' show unfilled;
 
-import 'generators/generate_default_language_map.dart';
 import 'generators/generate_meme_file.dart';
 import 'generators/generate_map_files.dart';
 import 'generators/generate_translation_finder.dart';
@@ -85,7 +80,6 @@ Future<void> main(List<String> args) async {
     YamlMap doc = loadYaml(await yamlFile.readAsString());
     // if .yaml file is empty, loadYaml() returns null;
     parms = extractYamlValues(doc ?? {}, current, projectName);
-    //await finder.setDefaultLanguage(parms.defaultLanguage);
 
     await scanMessages(current);
     if (errorsReported) {

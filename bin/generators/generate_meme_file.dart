@@ -21,22 +21,20 @@ Future<Meme> generateMemeFile(Parameters parms, Iterable<MessageStore> store,
 
   var targetFile = File('${directory.path}/${parms.packagePrefix}.dart_meme');
 
-  Meme meme;
+  Meme meme, previousMeme;
   var exists = await targetFile.exists();
   if (!exists) {
     await targetFile.create(recursive: true);
     var newProject = await prepareMemeProject(parms, store);
     meme = Meme()..addProject(newProject);
-    //content = await prepareMemeContent(parms, store);
-    //await targetFile.writeAsString(_dartFmt.format(content));
   } else if (isReset) {
     var newProject = await prepareMemeProject(parms, store);
     meme = Meme()..addProject(newProject);
   } else {
     var memeString = await targetFile.readAsString();
-    var oldMeme = Meme.decode(memeString);
+    previousMeme = Meme.decode(memeString);
     var newProject = await prepareMemeProject(parms, store);
-    var oldProject = oldMeme.getProject(newProject.name);
+    var oldProject = previousMeme.getProject(newProject.name);
     if (oldProject != null) {
       var mergedProject =
           newProject.mergeWith(oldProject, onlyIdsInThisProject: isClean);
@@ -46,6 +44,26 @@ Future<Meme> generateMemeFile(Parameters parms, Iterable<MessageStore> store,
     }
   }
 
+  // Todo here meme has only the current project.
+  //    super projects must be added
+  // 1) in meme add super projects scanned
+  // 2) merge each project present in meme with the corresponding
+  //    in previous meme (if any)
+  // 3) If a project is present only in previous meme and isClean and isReset
+  //    are false, add the old project to the new meme
+
+  // point 3) of above
+  if (exists && !isClean && !isReset) {
+    if (previousMeme == null) {
+      var previousMemeContent = await targetFile.readAsString();
+      previousMeme = Meme.decode(previousMemeContent);
+    }
+    for (var projectName in previousMeme.projectNames) {
+      if (!meme.containsProject(projectName)) {
+        meme.addProject(previousMeme.getProject(projectName));
+      }
+    }
+  }
   var content = meme.encode();
   await targetFile.writeAsString(_dartFmt.format(content));
 
