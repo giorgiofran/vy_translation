@@ -14,8 +14,10 @@ import 'package:vy_translation/src/abstract/translation_abstract.dart';
 const String baseDeferred = '    deferred as def_translations_';
 
 const String initTrFinder = '''
-void initTranslationFinder() => TranslationFinder._()
-    .setPackageMethod(finder.checkModule, finder.getTranslationMap);
+void initTranslationFinder() {
+  var finder = TranslationFinder._();
+  finder.setPackageMethod(finder.checkModule, finder.getTranslationMap);
+}
 ''';
 const String defFinder =
     'TranslationFinder get finder => TranslationFinder();\n';

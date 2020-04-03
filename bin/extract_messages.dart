@@ -85,7 +85,8 @@ Future<void> main(List<String> args) async {
     if (errorsReported) {
       exit(1);
     }
-    var meme = await generateMemeFile(parms, store.values);
+    var meme = await generateMemeFile(parms, store.values,
+        isClean: argResults[parmClean], isReset: argResults[parmReset]);
 
     await generateMapFiles(parms, meme);
     await generateTranslationFinderClass(parms);

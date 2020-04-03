@@ -1,13 +1,16 @@
 import 'dart:io';
+import 'package:path/path.dart' as p;
 import 'package:dart_style/dart_style.dart';
 import 'package:vy_dart_meme/src/parts/meme_header.dart';
 import 'package:vy_dart_meme/src/parts/meme_project.dart';
 import 'package:vy_dart_meme/src/parts/meme_term.dart';
 
 import 'package:vy_dart_meme/vy_dart_meme.dart';
+import 'package:yaml/yaml.dart';
 
 import '../utils/configuration_parameters.dart';
 import '../utils/message_store.dart';
+import '../utils/parameter_management.dart';
 
 // Here the store should contain also other projects.
 Future<Meme> generateMemeFile(Parameters parms, Iterable<MessageStore> store,
@@ -32,7 +35,14 @@ Future<Meme> generateMemeFile(Parameters parms, Iterable<MessageStore> store,
     meme = Meme()..addProject(newProject);
   } else {
     var memeString = await targetFile.readAsString();
-    previousMeme = Meme.decode(memeString);
+    try {
+      previousMeme = Meme.decode(memeString);
+    } on StateError catch (error) {
+      if (error.message.endsWith('variable.')) {
+        throw StateError('Missing "meme" variable in file ${targetFile.path}');
+      }
+      rethrow;
+    }
     var newProject = await prepareMemeProject(parms, store);
     var oldProject = previousMeme.getProject(newProject.name);
     if (oldProject != null) {
@@ -44,20 +54,39 @@ Future<Meme> generateMemeFile(Parameters parms, Iterable<MessageStore> store,
     }
   }
 
-  // Todo here meme has only the current project.
-  //    super projects must be added
+  // here meme has only the current project. Super projects must be added
   // 1) in meme add super projects scanned
+  var projectMap = await scanSuperProject(parms);
   // 2) merge each project present in meme with the corresponding
   //    in previous meme (if any)
+  MemeProject superProject;
+  if (exists && previousMeme == null) {
+    var previousMemeContent = await targetFile.readAsString();
+    try {
+      previousMeme = Meme.decode(previousMemeContent);
+    } on StateError catch (error) {
+      if (error.message.endsWith('variable.')) {
+        throw StateError('Missing "meme" variable in file ${targetFile.path}');
+      }
+      rethrow;
+    }
+  }
+  for (var key in projectMap.keys) {
+    if (!isReset && exists && previousMeme.containsProject(key)) {
+      superProject = projectMap[key].mergeWith(previousMeme.getProject(key),
+          onlyIdsInThisProject: isClean);
+    } else {
+      superProject = projectMap[key];
+    }
+    meme.addProject(superProject);
+  }
   // 3) If a project is present only in previous meme and isClean and isReset
   //    are false, add the old project to the new meme
-
-  // point 3) of above
   if (exists && !isClean && !isReset) {
-    if (previousMeme == null) {
+    /*   if (previousMeme == null) {
       var previousMemeContent = await targetFile.readAsString();
       previousMeme = Meme.decode(previousMemeContent);
-    }
+    }*/
     for (var projectName in previousMeme.projectNames) {
       if (!meme.containsProject(projectName)) {
         meme.addProject(previousMeme.getProject(projectName));
@@ -99,4 +128,56 @@ Future<String> prepareMemeContent(
     Parameters parms, Iterable<MessageStore> store) async {
   var meme = await prepareMeme(parms, store);
   return meme.encode();
+}
+
+Future<Map<String, MemeProject>> scanSuperProject(Parameters parms) async {
+  var ret = <String, MemeProject>{};
+  var packagesMap = await getPackagesMap(parms);
+  for (var projectName in packagesMap.keys) {
+    var path = packagesMap[projectName];
+    String dirPath;
+    if (path.startsWith('file://')) {
+      dirPath = p.fromUri(p.dirname(path));
+    } else {
+      if (path == 'lib/') {
+        // discards itself
+        continue;
+      }
+      dirPath = p.canonicalize(p.dirname(path));
+    }
+    var vyTranslationYamlFile = File('$dirPath/vy_translation.yaml');
+    if (!(await vyTranslationYamlFile.exists())) {
+      continue;
+    }
+
+    YamlMap doc = loadYaml(await vyTranslationYamlFile.readAsString());
+    // if .yaml file is empty, loadYaml() returns null;
+    parms = extractYamlValues(doc ?? {}, Directory(dirPath), projectName);
+
+    var memeFile =
+        File('${parms.memoryDirectory.path}/${parms.packagePrefix}.dart_meme');
+    if (!(await memeFile.exists())) {
+      throw StateError('Cannot find "meme" file ${memeFile.path}');
+    }
+    var content = await memeFile.readAsString();
+    var projectMeme = Meme.decode(content);
+    ret[parms.packagePrefix] = projectMeme.getProject(parms.packagePrefix);
+  }
+  return ret;
+}
+
+Future<Map<String, String>> getPackagesMap(Parameters parms) async {
+  var ret = <String, String>{};
+  var packagesFile = File('${Directory.current.path}/.packages');
+  var packages = await packagesFile.readAsLines();
+  int index;
+  for (var line in packages) {
+    if (line.startsWith('#')) {
+      continue;
+    }
+    index = line.indexOf(':');
+    ret[line.substring(0, index)] = line.substring(index + 1);
+  }
+
+  return ret;
 }
