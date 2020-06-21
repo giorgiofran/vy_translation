@@ -1,7 +1,7 @@
 import 'dart:io' show File;
 import 'package:dart_style/dart_style.dart' show DartFormatter;
 import 'package:recase/recase.dart' show ReCase;
-import 'package:vy_dart_meme/vy_dart_meme.dart' show Meme;
+import 'package:vy_dart_meme/vy_dart_meme.dart' show FlavorCollection, Meme;
 import 'package:vy_language_tag/vy_language_tag.dart' show LanguageTag;
 import 'package:vy_string_utils/vy_string_utils.dart' show splitInLines;
 
@@ -32,6 +32,12 @@ Map<String, String> prepareLanguageMap(LanguageTag languageTag, Meme meme) {
     for (var term in project.terms) {
       if (term.containsLanguageTerm(languageTag)) {
         ret['$projectName.${term.id}'] = term.getLanguageTerm(languageTag);
+      }
+      if (term.flavorCollections != null) {
+        for (var key in term.languageFlavorKeys(languageTag)) {
+          ret['$projectName.${term.id}.$key'] =
+              term.getLanguageFlavorTerm(languageTag, key);
+        }
       }
     }
   }

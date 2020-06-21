@@ -1,6 +1,6 @@
 import 'package:quiver/core.dart';
 import 'package:vy_translation/src/annotation/message_definition.dart';
-
+import 'package:vy_dart_meme/src/element/flavor_collection.dart';
 
 /// Identifies an unique Message Definition
 ///

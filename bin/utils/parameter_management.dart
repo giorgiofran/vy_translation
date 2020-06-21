@@ -1,6 +1,5 @@
 import 'dart:io' show Directory;
 import 'package:vy_language_tag/vy_language_tag.dart' show LanguageTag;
-import 'package:path/path.dart' as path;
 
 import '../extract_messages.dart' show log;
 import 'configuration_parameters.dart' show Parameters;

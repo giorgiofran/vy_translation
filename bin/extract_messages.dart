@@ -8,7 +8,8 @@ import 'package:vy_analyzer_utils/vy_analyzer_utils.dart'
 
 import 'package:yaml/yaml.dart';
 import 'package:logging/logging.dart';
-import 'package:vy_string_utils/vy_string_utils.dart' show unfilled;
+import 'package:vy_string_utils/vy_string_utils.dart'
+    show unfilled, dateTimeUpToSeconds;
 
 import 'generators/generate_meme_file.dart';
 import 'generators/generate_map_files.dart';
@@ -16,7 +17,6 @@ import 'generators/generate_translation_finder.dart';
 import 'utils/annotation_retriever.dart';
 import 'utils/arguments.dart';
 import 'utils/configuration_parameters.dart';
-import 'utils/formatting.dart';
 import 'utils/message_store.dart';
 import 'utils/parameter_management.dart';
 
@@ -35,7 +35,7 @@ Future<void> main(List<String> args) async {
 
   Logger.root.level = Level.WARNING;
   Logger.root.onRecord.listen((record) {
-    print('${record.level.name}: ${formatTimeRef(record.time)}: '
+    print('${record.level.name}: ${dateTimeUpToSeconds(record.time)}: '
         '${record.message}');
   });
 

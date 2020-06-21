@@ -6,8 +6,10 @@ import 'translation_en_gb.dart' deferred as def_translations_en_gb;
 import 'translation_en_ca.dart' deferred as def_translations_en_ca;
 import 'translation_en_in.dart' deferred as def_translations_en_in;
 
-void initTranslationFinder() => TranslationFinder._()
-    .setPackageMethod(finder.checkModule, finder.getTranslationMap);
+void initTranslationFinder() {
+  var finder = TranslationFinder._();
+  finder.setPackageMethod(finder.checkModule, finder.getTranslationMap);
+}
 
 TranslationFinder get finder => TranslationFinder();
 
@@ -78,7 +80,8 @@ class TranslationFinder extends TranslationAbstract {
   }
 
   @override
-  String get(String tag, {LanguageTag languageTag, List<String> values}) =>
-      super
-          .get('vy_translation.$tag', languageTag: languageTag, values: values);
+  String get(String tag,
+          {LanguageTag languageTag, List<String> values, Object flavorKeys}) =>
+      super.get('vy_translation.$tag',
+          languageTag: languageTag, values: values, flavorKeys: flavorKeys);
 }

@@ -6,6 +6,7 @@ import 'package:vy_dart_meme/src/parts/meme_project.dart';
 import 'package:vy_dart_meme/src/parts/meme_term.dart';
 
 import 'package:vy_dart_meme/vy_dart_meme.dart';
+import 'package:vy_dart_meme/src/element/flavor_collection.dart';
 import 'package:yaml/yaml.dart';
 
 import '../utils/configuration_parameters.dart';
@@ -47,7 +48,8 @@ Future<Meme> generateMemeFile(Parameters parms, Iterable<MessageStore> store,
     var oldProject = previousMeme.getProject(newProject.name);
     if (oldProject != null) {
       var mergedProject =
-          newProject.mergeWith(oldProject, onlyIdsInThisProject: isClean);
+          newProject.mergeWith(oldProject, onlyIdsInThisProject: isClean,
+          toBeMergedHasPriority: true);
       meme = Meme()..addProject(mergedProject);
     } else {
       meme = Meme()..addProject(newProject);
@@ -108,8 +110,14 @@ Future<MemeProject> prepareMemeProject(
   project.header = header;
   MemeTerm term;
   for (var message in store) {
-    term = MemeTerm(header.sourceLanguageTag, message.definition.id,
-        message.definition.text)
+    term = MemeTerm(header.originalLanguageTag,
+        message.definition.text, message.definition.id,
+        flavorCollections: message.definition.flavorCollections,
+        originalFlavorTerms: {
+          for (var keyList in message.definition.flavorTextPerKey.keys ?? [])
+            keyList.join(FlavorCollection.keySeparator):
+                message.definition.flavorTextPerKey[keyList]
+        })
       ..description = message.definition.description
       ..exampleValues = message.definition.exampleValues
       ..relativeSourcePath = message.sourcePath;

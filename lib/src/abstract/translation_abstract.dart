@@ -1,6 +1,8 @@
+import 'package:vy_dart_meme/vy_dart_meme.dart';
 import 'package:vy_language_tag/vy_language_tag.dart';
 import 'package:vy_lock/vy_lock.dart' show Mutex;
 import 'package:logging/logging.dart';
+import 'package:vy_string_utils/vy_string_utils.dart';
 import 'package:vy_translation/src/annotation/message_definition.dart';
 import 'package:vy_translation/src/translation/translation_finder.dart';
 
@@ -16,10 +18,13 @@ abstract class TranslationAbstract {
   static final log = Logger('TranslationAbstract');
 
   static LanguageTag _defaultLanguageTag;
+  static LanguageTag _lastTryLanguageTag;
+
   static final List<String> _openedLanguages = <String>[];
 
   TranslationAbstract(LanguageTag defaultLanguage) {
     _defaultLanguageTag = defaultLanguage;
+    _lastTryLanguageTag = defaultLanguage;
     addOpenedLanguageTag(defaultLanguage);
   }
 
@@ -82,45 +87,99 @@ abstract class TranslationAbstract {
       exampleValues: ['it_IT'],
       description: 'Before calling a translated message, the relative language '
           'must be initiated. When this happens the default language is used.')
-  String get(String tag, {LanguageTag languageTag, List<String> values}) {
+  String get(String tag,
+      {LanguageTag languageTag, List<String> values, Object flavorKeys}) {
     languageTag ??= _defaultLanguageTag;
 
+    Map translationMap;
+    String flavorTag;
+    var hasFlavor = false;
+    var flavorKey = '';
+    if (flavorKeys == null) {
+      // do nothing
+    } else if (flavorKeys is String) {
+      flavorKey = flavorKeys;
+    } else if (flavorKeys is List<String>) {
+      flavorKey = flavorKeys.join(FlavorCollection.keySeparator);
+    } else {
+      throw ArgumentError('The flavorKeys parameter must be '
+          'of type "String" or "List<String>"');
+    }
     if (!isLanguageOpen(languageTag)) {
       log.warning(finder.get('0002', values: [languageTag.code]));
       languageTag = LanguageTag('en', region: 'US');
     }
 
-    String returnMessage;
-    Map translationMap = _getTranslationMap(languageTag);
-    if (translationMap.containsKey(tag)) {
-      returnMessage = translationMap[tag];
+    String _fetchMessage(LanguageTag languageTag) {
+      String ret;
+      translationMap = _getTranslationMap(languageTag);
+      // In case the truncated tag is not managed.
+      if (translationMap == null) {
+        return ret;
+      }
+      if (hasFlavor && translationMap.containsKey(flavorTag)) {
+        ret = translationMap[flavorTag];
+      }
+      if (unfilled(ret) && translationMap.containsKey(tag)) {
+        ret = translationMap[tag];
+      }
+      return ret;
     }
-    if (returnMessage == null) {
+
+    hasFlavor = filled(flavorKey);
+    flavorTag = '$tag.$flavorKey';
+
+    String returnMessage;
+    returnMessage = _fetchMessage(languageTag);
+    /*   Map translationMap = _getTranslationMap(languageTag);
+    if (hasFlavor && translationMap.containsKey(flavorTag)) {
+      returnMessage = translationMap[flavorTag];
+    }
+    if (unfilled(returnMessage) && translationMap.containsKey(tag)) {
+      returnMessage = translationMap[tag];
+    }*/
+    if (unfilled(returnMessage)) {
       LanguageTag retry;
       retry = languageTag;
       while (retry.canBeTruncated) {
         retry = retry.truncated;
-        translationMap = _getTranslationMap(retry);
+        returnMessage = _fetchMessage(retry);
+        /*       translationMap = _getTranslationMap(retry);
         // In case the truncated tag is not managed.
         if (translationMap == null) {
           continue;
         }
-        if (translationMap.containsKey(tag)) {
+        if (hasFlavor && translationMap.containsKey(flavorTag)) {
+          returnMessage = translationMap[flavorTag];
+        }
+        if (unfilled(returnMessage) && translationMap.containsKey(tag)) {
           returnMessage = translationMap[tag];
-          if (returnMessage != null) {
-            break;
-          }
+        }*/
+        if (filled(returnMessage)) {
+          break;
         }
       }
     }
-    if (returnMessage == null) {
-      translationMap = _getTranslationMap(LanguageTag('en', region: 'US'));
-      returnMessage = translationMap[tag] ?? '';
+
+    if (unfilled(returnMessage)) {
+      returnMessage = _fetchMessage(_lastTryLanguageTag);
+      /*     translationMap = _getTranslationMap(_lastTryLanguageTag);
+      if (hasFlavor && translationMap.containsKey(flavorTag)) {
+        returnMessage = translationMap[flavorTag];
+      }
+      if (unfilled(returnMessage) && translationMap.containsKey(tag)) {
+        returnMessage = translationMap[tag];
+      }*/
+    }
+    if (unfilled(returnMessage)) {
+      throw StateError('No message found for tag "$tag" in '
+          'language "${_lastTryLanguageTag.posixCode}".');
     }
     if (values == null || values.isEmpty) {
       return returnMessage;
     }
-    return _mergeMessage(returnMessage, values, languageTag);
+
+    return _mergeMessage(returnMessage, values, languageTag, tag);
   }
 
   /// Receive a message String and inject values, if any
@@ -130,26 +189,34 @@ abstract class TranslationAbstract {
   /// (already converted into String)
   /// The placeholder %0 is the first element of the list,
   /// the %1 is the second, and so on.
-  String _mergeMessage(
-      String message, List<String> values, LanguageTag languageTag) {
+  String _mergeMessage(String message, List<String> values,
+      LanguageTag languageTag, String messageTag) {
     if (message == null) {
       return '';
     }
     if (values == null || values.isEmpty) {
       return message;
     }
+    if (message.isEmpty) {
+      print(ArgumentError('An empty message has been received for merging'));
+    }
     @MessageDefinition(
         '0001', 'The placeholder "%%0" in message "%1" has not been found.',
         exampleValues: ['2', 'File %0 in folder %1'],
         description: 'The message evidentiate when a value is passed '
-            'but no placeholder has been found to use it.\nThis could be caused '
-            'by a wrong message or a wrong list of values in the call')
+            'but no placeholder has been found to use it.\nThis could be '
+            'caused by a wrong message or a wrong list of values in the call')
     String ret, check = message;
     for (var idx = 0; idx < values.length; idx++) {
       ret = check.replaceAll('%$idx', values[idx]);
       if (ret == check) {
-        throw ArgumentError(finder.get('0001',
-            languageTag: languageTag, values: ['$idx', '$message']));
+        if (messageTag == 'vy_translation.0001') {
+          throw ArgumentError('The placeholder "%$idx" in message "$message" '
+              'has not been found.');
+        } else {
+          throw ArgumentError(finder.get('0001',
+              languageTag: languageTag, values: ['$idx', '$message']));
+        }
       }
       check = ret;
     }

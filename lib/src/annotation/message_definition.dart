@@ -1,11 +1,18 @@
+import 'package:vy_dart_meme/src/element/flavor_collection.dart';
+
 class MessageDefinition {
   final String id;
   final String text;
   final String description;
   final List<String> exampleValues;
+  final List<FlavorCollection> flavorCollections;
+  final Map<List<String>, String> flavorTextPerKey;
 
   const MessageDefinition(this.id, this.text,
-      {this.description, this.exampleValues});
+      {this.description,
+      this.exampleValues,
+      this.flavorCollections,
+      this.flavorTextPerKey});
 
   @override
   bool operator ==(other) =>

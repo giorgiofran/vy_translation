@@ -80,9 +80,10 @@ const String defEndTranslationMap = r'''
 ''';
 const String defGet = r'''
   @override
-  String get(String tag, {LanguageTag languageTag, List<String> values}) =>
+  String get(String tag, {LanguageTag languageTag, List<String> values, 
+    Object flavorKeys}) =>
       super.get('%0.$tag',
-          languageTag: languageTag, values: values);
+          languageTag: languageTag, values: values, flavorKeys: flavorKeys);
 ''';
 const String closeClassDef = '}';
 

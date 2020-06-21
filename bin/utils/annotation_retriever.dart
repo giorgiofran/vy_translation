@@ -1,11 +1,12 @@
 import 'package:vy_analyzer_utils/vy_analyzer_utils.dart'
-    show AstUnitInfo, dartConstObjectField;
-import 'package:vy_translation/src/translation/translation_finder.dart';
+    show AstUnitInfo, dartConstObjectField, dartConstObjectValue;
+import 'package:vy_dart_meme/vy_dart_meme.dart';
 import 'package:vy_translation/vy_translation.dart' show MessageDefinition;
 import 'package:analyzer/dart/ast/visitor.dart';
 import 'package:analyzer/dart/ast/ast.dart';
 import 'package:analyzer/dart/constant/value.dart';
 import 'package:logging/logging.dart';
+import 'package:analyzer/dart/element/type.dart';
 
 import '../extract_messages.dart';
 import 'message_store.dart';
@@ -33,8 +34,22 @@ class AnnotationRetriever extends GeneralizingAstVisitor<void>
     List<String> exampleValues = internal == null
         ? internal
         : <String>[for (String string in internal) string];
+    List<dynamic> flavors =
+        dartConstObjectFieldTranslation(dartObject, 'flavorCollections');
+    Map<dynamic, dynamic> flavorTexts =
+        dartConstObjectField(dartObject, 'flavorTextPerKey');
+
     return MessageDefinition(id, text,
-        description: description, exampleValues: exampleValues);
+        description: description,
+        exampleValues: exampleValues,
+        flavorCollections: <FlavorCollection>[
+          if (flavors != null) ...flavors
+        ],
+        flavorTextPerKey: <List<String>, String>{
+          if (flavorTexts != null)
+            for (var keyList in flavorTexts.keys)
+              <String>[...keyList]: flavorTexts[keyList]
+        });
   }
 
   void addToStore(MessageDefinition definition, String sourcePath) {
@@ -77,5 +92,48 @@ class AnnotationRetriever extends GeneralizingAstVisitor<void>
             'has been processed.');
       }
     }
+  }
+}
+
+dynamic dartConstObjectFieldTranslation(
+    DartObject dartObject, String fieldName) {
+  if (dartObject == null) {
+    return null;
+  }
+  return dartConstObjectValueTranslation(dartObject.getField(fieldName));
+}
+
+dynamic dartConstObjectValueTranslation(DartObject dartObject) {
+  if (dartObject == null) {
+    return null;
+  }
+  ParameterizedType fieldType;
+  fieldType = dartObject.type;
+
+  if (fieldType == null || fieldType.isDartCoreNull) {
+    return null;
+  } else if (fieldType. /*getDisplayString()*/ toString() ==
+      'List<FlavorCollection>') {
+    List internal = dartObject.toListValue();
+    if (internal == null) {
+      return null;
+    }
+    return [
+      for (DartObject content in internal)
+        dartConstObjectValueTranslation(content)
+    ];
+  } else if (fieldType. /*getDisplayString()*/ toString() ==
+      'FlavorCollection') {
+    return (FlavorCollection(
+        dartConstObjectFieldTranslation(dartObject, 'name'),
+        <String>[...dartConstObjectFieldTranslation(dartObject, '_flavors')]));
+  } else if (dartObject
+          .getField('(super)')
+          ?.type
+          ?. /*getDisplayString()*/ toString() ==
+      'FlavorCollection') {
+    return dartConstObjectFieldTranslation(dartObject, '(super)');
+  } else {
+    return dartConstObjectValue(dartObject);
   }
 }
