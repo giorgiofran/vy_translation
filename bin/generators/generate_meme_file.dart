@@ -76,7 +76,8 @@ Future<Meme> generateMemeFile(Parameters parms, Iterable<MessageStore> store,
   for (var key in projectMap.keys) {
     if (!isReset && exists && previousMeme.containsProject(key)) {
       superProject = projectMap[key].mergeWith(previousMeme.getProject(key),
-          onlyIdsInThisProject: isClean);
+          onlyIdsInThisProject: isClean,
+          toBeMergedHasPriority: true);
     } else {
       superProject = projectMap[key];
     }
