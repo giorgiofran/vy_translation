@@ -88,7 +88,11 @@ abstract class TranslationAbstract {
       description: 'Before calling a translated message, the relative language '
           'must be initiated. When this happens the default language is used.')
   String get(String tag,
-      {LanguageTag languageTag, List<String> values, Object flavorKeys}) {
+      {LanguageTag languageTag,
+      List<String> values,
+      Object flavorKeys,
+      bool throwErrorIfMissing}) {
+    throwErrorIfMissing ??= false;
     languageTag ??= _defaultLanguageTag;
 
     Map translationMap;
@@ -172,8 +176,11 @@ abstract class TranslationAbstract {
       }*/
     }
     if (unfilled(returnMessage)) {
+      if (throwErrorIfMissing) {
       throw StateError('No message found for tag "$tag" in '
           'language "${_lastTryLanguageTag.posixCode}".');
+      } 
+      return '*** <$tag>';
     }
     if (values == null || values.isEmpty) {
       return returnMessage;
