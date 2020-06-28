@@ -8,7 +8,8 @@ import 'package:analyzer/dart/constant/value.dart';
 import 'package:logging/logging.dart';
 import 'package:analyzer/dart/element/type.dart';
 
-import '../extract_messages.dart';
+import '../command/extract_messages_cmd.dart' show errorsReported, parms, store;
+import '../extract_messages.dart' show  log ;
 import 'message_store.dart';
 
 class AnnotationRetriever extends GeneralizingAstVisitor<void>

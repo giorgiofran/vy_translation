@@ -10,7 +10,7 @@ const String keyTranslationDirectory = 'translations_directory';
 const String keyDefaultLanguage = 'default_language';
 const String keyTargetLanguages = 'target_languages';
 
-Parameters extractYamlValues(Map yamlMap, Directory current, String projectName) {
+Parameters extractVyTranslationParms(Map yamlMap, Directory current, String projectName) {
   var parms = Parameters();
 
   parms.packagePrefix = getStringParm(

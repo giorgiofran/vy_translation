@@ -6,7 +6,7 @@ import 'package:analyzer/dart/analysis/analysis_context.dart'
     show AnalysisContext;
 import 'package:analyzer/dart/analysis/session.dart' show AnalysisSession;
 import 'package:analyzer/dart/analysis/results.dart'
-    show ParsedUnitResult, ResolvedUnitResult;
+    show /* ParsedUnitResult, */ ResolvedUnitResult;
 import 'package:analyzer/dart/ast/ast.dart' show Annotation, CompilationUnit;
 import 'package:analyzer/dart/ast/visitor.dart' show GeneralizingAstVisitor;
 import 'package:analyzer/file_system/physical_file_system.dart'
@@ -15,7 +15,7 @@ import 'package:analyzer/file_system/physical_file_system.dart'
 import 'package:logging/logging.dart' show Level, Logger;
 import 'package:vy_analyzer_utils/vy_analyzer_utils.dart'
     show DartSourceAnalysis;
-import 'package:yaml/yaml.dart';
+//import 'package:yaml/yaml.dart';
 
 String formatTimeRef(DateTime time) {
   var timeString = time.toIso8601String().replaceAll('T', ' ');
@@ -29,8 +29,8 @@ Future<void> main(List<String> args) async {
     print(
         '${record.level.name}: ${formatTimeRef(record.time)}: ${record.message}');
   });
-  AnalysisContextCollection collection;
-  collection = getAnalysisContextCollection(Directory.current);
+  //AnalysisContextCollection collection;
+  //collection = getAnalysisContextCollection(Directory.current);
 /*  analyzeSomeFiles(collection, [
     '/home/giorgio/dart-projects/git/vy_translation/lib/src/abstract/translation_abstract.dart'
   ]);*/
@@ -46,7 +46,7 @@ Future<void> main(List<String> args) async {
       throw StateError(
           'Missing file "vy_translation.yaml" in project directory (${current.path})');
     }
-    YamlMap doc = loadYaml(await yamlFile.readAsString());
+    //YamlMap doc = loadYaml(await yamlFile.readAsString());
     // if .yaml file is empty, loadYaml() returns null;
     /*Parameters parms =*/ //extractYamlValues(doc ?? {}, current);
     await executeDsa(Directory.current);
@@ -91,12 +91,12 @@ void analyzeSingleFile(AnalysisContext context, String path) async {
 }
 
 /// Unresolved AST
-void processUnresolvedFile(AnalysisSession session, String path) {
+/* void processUnresolvedFile(AnalysisSession session, String path) {
   ParsedUnitResult result;
   result = session.getParsedUnit(path);
   CompilationUnit unit;
   unit = result.unit;
-}
+} */
 
 /// Resolved AST
 void processResolvedFile(AnalysisSession session, String path) async {

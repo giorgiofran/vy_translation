@@ -161,7 +161,7 @@ Future<Map<String, MemeProject>> scanSuperProject(Parameters parms) async {
 
     YamlMap doc = loadYaml(await vyTranslationYamlFile.readAsString());
     // if .yaml file is empty, loadYaml() returns null;
-    parms = extractYamlValues(doc ?? {}, Directory(dirPath), projectName);
+    parms = extractVyTranslationParms(doc ?? {}, Directory(dirPath), projectName);
 
     var memeFile =
         File('${parms.memoryDirectory.path}/${parms.packagePrefix}.dart_meme');
