@@ -7,8 +7,12 @@ import 'package:logging/logging.dart';
 import 'package:vy_string_utils/vy_string_utils.dart' show dateTimeUpToSeconds;
 import 'package:args/args.dart';
 
-import 'command/export_translations_cmd.dart';
-import 'utils/export_arguments.dart';
+import 'command/translate_cmd.dart';
+import 'utils/configuration_parameters.dart';
+import 'utils/extract_configs.dart';
+import 'utils/extract_project_name.dart';
+import 'utils/parameter_management.dart';
+import 'utils/translate_arguments.dart';
 
 final log = Logger('extract_messages');
 
@@ -29,10 +33,15 @@ Future<void> main(List<String> args) async {
         '${record.message}');
   });
 
+  var parms = extractVyTranslationParms(
+      await extractVyTranslation(Directory.current),
+      Directory.current,
+      await extractProjectName(Directory.current));
+
   ArgResults argResults;
   try {
     // Create parameter structure and parses arguments
-    argResults = parseExportArguments(args);
+    argResults = parseTranslateArguments(args, parms);
     if (argResults == null) {
       // Error message already logged in the parseArguments() method
       exit(1);
@@ -44,7 +53,7 @@ Future<void> main(List<String> args) async {
       Logger.root.level = Level.ALL;
     }
 
-    await exportTranslationsCmd();
+    await translateCmd(parms, argResults);
   } catch (e, stack) {
     log.severe('$e');
     if (argResults[parmDebug]) {

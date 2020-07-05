@@ -1,6 +1,6 @@
 name: vy_translation
 description: A way to manage message translations even from other packages (that use vy_translation ...)
-version: 0.2.3
+version: 0.2.4
 homepage: https://github.com/giorgiofran/vy_translation
 
 environment:
@@ -8,10 +8,11 @@ environment:
 
 dependencies:
   yaml: any
-  xml: any
+  #xml: any
   recase: any
   quiver: any
   dart_style: any
+  dart_console: any
   vy_lock: #^1.6.0
     git:
       url: "https://github.com/giorgiofran/vy_lock"
