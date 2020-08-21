@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:dart_console/dart_console.dart';
 import 'package:vy_dart_meme/vy_dart_meme.dart';
 import 'package:args/args.dart';
 import 'package:vy_language_tag/vy_language_tag.dart';

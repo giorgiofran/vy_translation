@@ -8,7 +8,6 @@ import 'package:vy_string_utils/vy_string_utils.dart' show dateTimeUpToSeconds;
 import 'package:args/args.dart';
 
 import 'command/translate_cmd.dart';
-import 'utils/configuration_parameters.dart';
 import 'utils/extract_configs.dart';
 import 'utils/extract_project_name.dart';
 import 'utils/parameter_management.dart';
