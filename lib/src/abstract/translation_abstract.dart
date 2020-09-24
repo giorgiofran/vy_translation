@@ -23,9 +23,12 @@ abstract class TranslationAbstract {
   static final List<String> _openedLanguages = <String>[];
 
   TranslationAbstract(LanguageTag defaultLanguage) {
-    _defaultLanguageTag = defaultLanguage;
-    _lastTryLanguageTag = defaultLanguage;
-    addOpenedLanguageTag(defaultLanguage);
+    // This must be done only on the "Top" finder
+    if (!isInitialized) {
+      _defaultLanguageTag = defaultLanguage;
+      _lastTryLanguageTag = defaultLanguage;
+      addOpenedLanguageTag(defaultLanguage);
+    }
   }
 
   Mutex lock = Mutex();
@@ -177,9 +180,9 @@ abstract class TranslationAbstract {
     }
     if (unfilled(returnMessage)) {
       if (throwErrorIfMissing) {
-      throw StateError('No message found for tag "$tag" in '
-          'language "${_lastTryLanguageTag.posixCode}".');
-      } 
+        throw StateError('No message found for tag "$tag" in '
+            'language "${_lastTryLanguageTag.posixCode}".');
+      }
       return '*** <$tag>';
     }
     if (values == null || values.isEmpty) {
