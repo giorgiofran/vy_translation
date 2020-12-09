@@ -114,8 +114,8 @@ dynamic dartConstObjectValueTranslation(DartObject dartObject) {
 
   if (fieldType == null || fieldType.isDartCoreNull) {
     return null;
-  } else if (fieldType. /*getDisplayString()*/ toString() ==
-      'List<FlavorCollection>') {
+  } else if (fieldType.toString() == 'List<FlavorCollection>' ||
+      '$fieldType' == 'List<FlavorCollection*>*') {
     List internal = dartObject.toListValue();
     if (internal == null) {
       return null;
@@ -124,16 +124,14 @@ dynamic dartConstObjectValueTranslation(DartObject dartObject) {
       for (DartObject content in internal)
         dartConstObjectValueTranslation(content)
     ];
-  } else if (fieldType. /*getDisplayString()*/ toString() ==
-      'FlavorCollection') {
+  } else if ('$fieldType' == 'FlavorCollection' ||
+      '$fieldType' == 'FlavorCollection*') {
     return (FlavorCollection(
         dartConstObjectFieldTranslation(dartObject, 'name'),
         <String>[...dartConstObjectFieldTranslation(dartObject, '_flavors')]));
-  } else if (dartObject
-          .getField('(super)')
-          ?.type
-          ?. /*getDisplayString()*/ toString() ==
-      'FlavorCollection') {
+  } else if (dartObject.getField('(super)')?.type?.toString() ==
+          'FlavorCollection' ||
+      dartObject.getField('(super)')?.type?.toString() == 'FlavorCollection*') {
     return dartConstObjectFieldTranslation(dartObject, '(super)');
   } else {
     return dartConstObjectValue(dartObject);

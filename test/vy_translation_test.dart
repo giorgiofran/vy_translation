@@ -24,9 +24,9 @@ void main() {
 
   group('get error', () {
     test('Get test-message', () {
-      expect(() => finder.get('test-msg'), throwsStateError);
-      expect(() => finder.get('test-msg', flavorKeys: MaleFemaleFlavor.female),
-          throwsStateError);
+      expect(finder.get('test-msg'), '*** <vy_translation.test-msg>');
+      expect(finder.get('test-msg', flavorKeys: MaleFemaleFlavor.female),
+          '*** <vy_translation.test-msg>');
       expect(
           () => finder.get('test-message',
               flavorKeys: [MaleFemaleFlavor.female], values: ['error']),
