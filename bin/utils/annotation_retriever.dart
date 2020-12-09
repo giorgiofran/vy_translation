@@ -9,7 +9,7 @@ import 'package:logging/logging.dart';
 import 'package:analyzer/dart/element/type.dart';
 
 import '../command/extract_messages_cmd.dart' show errorsReported, parms, store;
-import '../extract_messages.dart' show  log ;
+import '../extract_messages.dart' show log;
 import 'message_store.dart';
 
 class AnnotationRetriever extends GeneralizingAstVisitor<void>
@@ -25,8 +25,9 @@ class AnnotationRetriever extends GeneralizingAstVisitor<void>
   }
 
   MessageDefinition generateMessageDefinition(Annotation visitAnnotation) {
-    DartObject dartObject;
-    dartObject = visitAnnotation.elementAnnotation.constantValue;
+    //DartObject dartObject;
+    var dartObject = visitAnnotation.elementAnnotation
+        .computeConstantValue(); //constantValue;
     String id = dartConstObjectField(dartObject, 'id');
 
     String text = dartConstObjectField(dartObject, 'text');
