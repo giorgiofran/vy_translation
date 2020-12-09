@@ -84,8 +84,9 @@ const String defGet = r'''
           {LanguageTag languageTag,
           List<String> values,
           Object flavorKeys,
+          String project,
           bool throwErrorIfMissing}) =>
-      super.get('%0.$tag',
+      super.get('${project ?? '%0'}.$tag',
           languageTag: languageTag,
           values: values,
           flavorKeys: flavorKeys,

@@ -84,8 +84,9 @@ class TranslationFinder extends TranslationAbstract {
           {LanguageTag languageTag,
           List<String> values,
           Object flavorKeys,
+          String project,
           bool throwErrorIfMissing}) =>
-      super.get('vy_translation.$tag',
+      super.get('${project ?? 'vy_translation'}.$tag',
           languageTag: languageTag,
           values: values,
           flavorKeys: flavorKeys,
