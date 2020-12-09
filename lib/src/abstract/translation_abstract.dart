@@ -9,6 +9,17 @@ import 'package:vy_translation/src/translation/translation_finder.dart';
 typedef checkModuleFn = Future Function(LanguageTag);
 typedef getTranslationMapFn = Map<String, String> Function(LanguageTag);
 
+@MessageDefinition(
+    '0001', 'The placeholder "%%0" in message "%1" has not been found.',
+    exampleValues: ['2', 'File %0 in folder %1'],
+    description: 'The message evidentiate when a value is passed '
+        'but no placeholder has been found to use it.\nThis could be '
+        'caused by a wrong message or a wrong list of values in the call')
+@MessageDefinition('0002',
+    'Language "%0" has not been opened yet. Using default language "en_US".',
+    exampleValues: ['it_IT'],
+    description: 'Before calling a translated message, the relative language '
+        'must be initiated. When this happens the default language is used.')
 abstract class TranslationAbstract {
   static checkModuleFn _checkModule;
   static getTranslationMapFn _getTranslationMap;
@@ -85,11 +96,6 @@ abstract class TranslationAbstract {
     return get(tag, languageTag: languageTag, values: values);
   }
 
-  @MessageDefinition('0002',
-      'Language "%0" has not been opened yet. Using default language "en_US".',
-      exampleValues: ['it_IT'],
-      description: 'Before calling a translated message, the relative language '
-          'must be initiated. When this happens the default language is used.')
   String get(String tag,
       {LanguageTag languageTag,
       List<String> values,
@@ -210,12 +216,7 @@ abstract class TranslationAbstract {
     if (message.isEmpty) {
       print(ArgumentError('An empty message has been received for merging'));
     }
-    @MessageDefinition(
-        '0001', 'The placeholder "%%0" in message "%1" has not been found.',
-        exampleValues: ['2', 'File %0 in folder %1'],
-        description: 'The message evidentiate when a value is passed '
-            'but no placeholder has been found to use it.\nThis could be '
-            'caused by a wrong message or a wrong list of values in the call')
+
     String ret, check = message;
     for (var idx = 0; idx < values.length; idx++) {
       ret = check.replaceAll('%$idx', values[idx]);

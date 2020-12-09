@@ -8,4 +8,6 @@ Map<String, String> translationsEnCa = SplayTreeMap<String, String>()
         'Language "%0" has not been opened yet. Using default '
             'language "en_US"\n\n',
     'vy_translation.test-message': 'Male Version\n',
+    'vy_translation.test-message.male': 'Male Version flavor',
+    'vy_translation.test-message.female': 'Female Version flavor',
   });

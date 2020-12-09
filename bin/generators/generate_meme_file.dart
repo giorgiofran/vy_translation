@@ -47,9 +47,8 @@ Future<Meme> generateMemeFile(Parameters parms, Iterable<MessageStore> store,
     var newProject = await prepareMemeProject(parms, store);
     var oldProject = previousMeme.getProject(newProject.name);
     if (oldProject != null) {
-      var mergedProject =
-          newProject.mergeWith(oldProject, onlyIdsInThisProject: isClean,
-          toBeMergedHasPriority: true);
+      var mergedProject = newProject.mergeWith(oldProject,
+          onlyIdsInThisProject: isClean, toBeMergedHasPriority: true);
       meme = Meme()..addProject(mergedProject);
     } else {
       meme = Meme()..addProject(newProject);
@@ -76,8 +75,7 @@ Future<Meme> generateMemeFile(Parameters parms, Iterable<MessageStore> store,
   for (var key in projectMap.keys) {
     if (!isReset && exists && previousMeme.containsProject(key)) {
       superProject = projectMap[key].mergeWith(previousMeme.getProject(key),
-          onlyIdsInThisProject: isClean,
-          toBeMergedHasPriority: true);
+          onlyIdsInThisProject: isClean, toBeMergedHasPriority: true);
     } else {
       superProject = projectMap[key];
     }
@@ -111,8 +109,12 @@ Future<MemeProject> prepareMemeProject(
   project.header = header;
   MemeTerm term;
   for (var message in store) {
-    term = MemeTerm(header.originalLanguageTag,
-        message.definition.text, message.definition.id,
+    if (message.definition.id == null) {
+      throw StateError('Null id in project "${project.name}", '
+          'source "${message.sourcePath}"');
+    }
+    term = MemeTerm(header.originalLanguageTag, message.definition.text,
+        message.definition.id,
         flavorCollections: message.definition.flavorCollections,
         originalFlavorTerms: {
           for (var keyList in message.definition.flavorTextPerKey.keys ?? [])
@@ -161,7 +163,8 @@ Future<Map<String, MemeProject>> scanSuperProject(Parameters parms) async {
 
     YamlMap doc = loadYaml(await vyTranslationYamlFile.readAsString());
     // if .yaml file is empty, loadYaml() returns null;
-    parms = extractVyTranslationParms(doc ?? {}, Directory(dirPath), projectName);
+    parms =
+        extractVyTranslationParms(doc ?? {}, Directory(dirPath), projectName);
 
     var memeFile =
         File('${parms.memoryDirectory.path}/${parms.packagePrefix}.dart_meme');

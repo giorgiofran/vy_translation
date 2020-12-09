@@ -43,7 +43,13 @@ List<Map<String, dynamic>> meme = [
           "MaleFemaleFlavor": ["male", "female"]
         },
         "originalFlavorTerms": {"female": "Female version"},
-        "idTerms": {"en-CA": "Male Version\n"}
+        "idTerms": {"en-CA": "Male Version\n"},
+        "flavorTerms": {
+          "en-CA": {
+            "male": "Male Version flavor",
+            "female": "Female Version flavor"
+          }
+        }
       }
     }
   }
