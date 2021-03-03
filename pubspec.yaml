@@ -2,6 +2,7 @@ name: vy_translation
 version: 0.2.4
 description: A way to manage message translations even from other packages (that use vy_translation ...)
 homepage: "https://github.com/giorgiofran/vy_translation"
+publish_to: none
 
 dependencies:
   dart_console: 1.0.0
@@ -21,7 +22,7 @@ dependencies:
     git:
       url: "https://github.com/giorgiofran/vy_lock"
       ref: rel.1.1.0
-  yaml: 3.1.0
+  yaml: 2.2.1
 
 dev_dependencies:
   pedantic: ^1.8.0
