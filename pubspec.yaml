@@ -16,6 +16,7 @@ dependencies:
   vy_lock: #^1.6.0
     git:
       url: "https://github.com/giorgiofran/vy_lock"
+      ref: null-safety
 
   vy_language_tag: ^0.2.0-nullsafety
 
