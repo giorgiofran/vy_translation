@@ -16,7 +16,7 @@ Future<YamlMap> extractYamlMap(Directory directory, String fileName) async {
         'The directory "$directory" does not contain the file "$fileName.yaml"');
   }
   YamlMap yamlMap = loadYaml(await yamlFile.readAsString());
-  if (yamlMap == null) {
+  if (yamlMap.isEmpty) {
     throw StateError(
         'File "$fileName.yaml" in directory "$directory" is empty');
   }

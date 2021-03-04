@@ -8,7 +8,7 @@ const String parmDebug = 'debug';
 const String parmClean = 'clean';
 const String parmReset = 'reset';
 
-ArgResults parseExportArguments(List<String> args) {
+ArgResults? parseExportArguments(List<String> args) {
   var parser = ArgParser();
   parser.addFlag(parmHelp,
       negatable: false, abbr: 'h', defaultsTo: false, help: 'This help.');
@@ -35,9 +35,9 @@ ArgResults parseExportArguments(List<String> args) {
       defaultsTo: false,
       help: 'Removes all files containing the translation_3 maps. '
           'Consider making a backup if you are not sure of what you are doing');
-  ArgResults results;
+  //ArgResults results;
   try {
-    results = parser.parse(args);
+    var results = parser.parse(args);
     if (results[parmVerbose] && results[parmDebug]) {
       log.severe(
           'You cannot specify the --verbose and the --debug options togheter');
@@ -49,9 +49,10 @@ ArgResults parseExportArguments(List<String> args) {
     } else if (results[parmHelp]) {
       print(parser.usage);
     }
+    return results;
   } on FormatException catch (e) {
     log.severe('$e');
   }
 
-  return results;
+  return null;
 }

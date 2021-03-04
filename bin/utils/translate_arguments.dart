@@ -10,7 +10,7 @@ const String parmOriginLanguageTag = 'originLanguageTag';
 const String parmLanguageTag = 'languageTag';
 const String parmShowAll = 'showAll';
 
-ArgResults parseTranslateArguments(List<String> args, Parameters parms) {
+ArgResults? parseTranslateArguments(List<String> args, Parameters parms) {
   var parser = ArgParser();
   parser.addFlag(parmHelp,
       negatable: false, abbr: 'h', defaultsTo: false, help: 'This help.');
@@ -30,11 +30,11 @@ ArgResults parseTranslateArguments(List<String> args, Parameters parms) {
       help: 'Language to translate. It can be the origin language itself, '
           'in case we want to modify some terms',
       allowed: [
-        parms.defaultLanguage.posixCode,
-        for (var tag in parms.targetLanguages) tag.posixCode
+        if (parms.defaultLanguage != null) parms.defaultLanguage!.posixCode,
+        for (var tag in parms.targetLanguages ?? {}) tag.posixCode
       ]);
   parser.addOption(parmOriginLanguageTag,
-      defaultsTo: parms.defaultLanguage.posixCode,
+      defaultsTo: parms.defaultLanguage?.posixCode ?? '',
       abbr: 'o',
       help: 'Language from which to translate');
   parser.addFlag(parmShowAll,
@@ -42,19 +42,20 @@ ArgResults parseTranslateArguments(List<String> args, Parameters parms) {
       abbr: 'a',
       defaultsTo: false,
       help: 'Show all messages, otherwise only those with no translation');
-  ArgResults results;
+  //ArgResults results;
   try {
-    results = parser.parse(args);
+    var results = parser.parse(args);
     if (results[parmVerbose] && results[parmDebug]) {
       log.severe(
           'You cannot specify the --verbose and the --debug options togheter');
       return null;
     } else if (results[parmHelp]) {
       print(parser.usage);
-    }
+    }  return results;
+
   } on FormatException catch (e) {
     log.severe('$e');
   }
 
-  return results;
+  return null;
 }

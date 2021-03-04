@@ -1,4 +1,5 @@
 #!/usr/bin/env dart
+
 library export_translations;
 
 import 'dart:io';
@@ -29,7 +30,7 @@ Future<void> main(List<String> args) async {
         '${record.message}');
   });
 
-  ArgResults argResults;
+  ArgResults? argResults;
   try {
     // Create parameter structure and parses arguments
     argResults = parseExportArguments(args);
@@ -47,7 +48,7 @@ Future<void> main(List<String> args) async {
     await exportTranslationsCmd();
   } catch (e, stack) {
     log.severe('$e');
-    if (argResults[parmDebug]) {
+    if (argResults?[parmDebug] ?? true) {
       log.severe('\n$stack');
     }
     exit(1);

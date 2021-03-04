@@ -49,7 +49,7 @@ enum FindDirection { forwards, backwards }
 var findDirection = FindDirection.forwards;
 
 String messageText = '';
-DateTime messageTimestamp;
+DateTime? messageTimestamp;
 
 void initEditor() {
   isFileDirty = false;
@@ -184,7 +184,7 @@ void editorFind() {
   final query = editorPrompt(
       'Search (ESC to cancel, use arrows for prev/next): ', editorFindCallback);
 
-  if (query == null) {
+  if (query.isEmpty) {
     // Escape pressed
     cursorCol = savedCursorCol;
     cursorRow = savedCursorRow;
@@ -218,7 +218,7 @@ void editorOpen(String filename) {
 void editorSave() async {
   if (editedFilename.isEmpty) {
     editedFilename = editorPrompt('Save as: ');
-    if (editedFilename == null) {
+    if (editedFilename.isEmpty) {
       editorSetStatusMessage('Save aborted.');
       return;
     }
@@ -402,9 +402,11 @@ void editorDrawStatusBar() {
 }
 
 void editorDrawMessageBar() {
-  if (DateTime.now().difference(messageTimestamp) < Duration(seconds: 5)) {
-    console.write(truncateString(messageText, editorWindowWidth)
-        .padRight(editorWindowWidth));
+  if (messageTimestamp != null) {
+    if (DateTime.now().difference(messageTimestamp!) < Duration(seconds: 5)) {
+      console.write(truncateString(messageText, editorWindowWidth)
+          .padRight(editorWindowWidth));
+    }
   }
 }
 
@@ -429,7 +431,7 @@ void editorSetStatusMessage(String message) {
 }
 
 String editorPrompt(String message,
-    [Function(String text, Key lastPressed) callback]) {
+    [Function(String text, Key lastPressed)? callback]) {
   final originalCursorRow = cursorRow;
 
   editorSetStatusMessage(message);
@@ -441,7 +443,7 @@ String editorPrompt(String message,
   cursorRow = originalCursorRow;
   editorSetStatusMessage('');
 
-  return response;
+  return response ?? '';
 }
 
 //

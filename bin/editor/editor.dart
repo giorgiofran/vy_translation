@@ -52,7 +52,7 @@ enum FindDirection { forwards, backwards }
 var findDirection = FindDirection.forwards;
 
 String messageText = '';
-DateTime messageTimestamp;
+DateTime? messageTimestamp;
 
 void initEditor() {
   isSentenceDirty = false;
@@ -199,7 +199,7 @@ void editorFind() {
   final query = editorPrompt(
       'Search (ESC to cancel, use arrows for prev/next): ', editorFindCallback);
 
-  if (query == null) {
+  if (query.isEmpty) {
     // Escape pressed
     cursorCol = savedCursorCol;
     cursorRow = savedCursorRow;
@@ -336,10 +336,10 @@ int getFileCol(int row, int renderCol) {
   return fileCol;
 }
 
-void editorUpdateRenderRow(int rowIndex, {bool doNotCheckRows}) {
-  doNotCheckRows ??= false;
+void editorUpdateRenderRow(int rowIndex, {bool? doNotCheckRows}) {
+  var _doNotCheckRows = doNotCheckRows ?? false;
 
-  assert(doNotCheckRows || renderRows.length == sentenceRows.length);
+  assert(_doNotCheckRows || renderRows.length == sentenceRows.length);
 
   var renderBuffer = '';
   final fileRow = sentenceRows[rowIndex];
@@ -446,9 +446,11 @@ void editorDrawStatusBar() {
 }
 
 void editorDrawMessageBar() {
-  if (DateTime.now().difference(messageTimestamp) < Duration(seconds: 5)) {
-    console.write(truncateString(messageText, editorWindowWidth)
-        .padRight(editorWindowWidth));
+  if (messageTimestamp != null) {
+    if (DateTime.now().difference(messageTimestamp!) < Duration(seconds: 5)) {
+      console.write(truncateString(messageText, editorWindowWidth)
+          .padRight(editorWindowWidth));
+    }
   }
 }
 
@@ -473,7 +475,7 @@ void editorSetStatusMessage(String message) {
 }
 
 String editorPrompt(String message,
-    [Function(String text, Key lastPressed) callback]) {
+    [Function(String text, Key lastPressed)? callback]) {
   final originalCursorRow = cursorRow;
 
   editorSetStatusMessage(message);
@@ -485,7 +487,7 @@ String editorPrompt(String message,
   cursorRow = originalCursorRow;
   editorSetStatusMessage('');
 
-  return response;
+  return response ?? '';
 }
 
 //

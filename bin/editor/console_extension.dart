@@ -6,7 +6,7 @@ extension ConsoleExtension on Console {
   //static var systemEncoding = SystemEncoding();
 
   Key readSystemKey() {
-    Key key;
+    Key? key;
     int charCode;
     var codeUnit;
     var bytes = <int>[];

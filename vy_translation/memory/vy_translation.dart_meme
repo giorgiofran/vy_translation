@@ -11,7 +11,8 @@ List<Map<String, dynamic>> meme = [
         "originalTerm":
             "The placeholder \"%%0\" in message \"%1\" has not been found.",
         "id": "0001",
-        "relativeSourcePath": "lib/src/abstract/translation_abstract.dart",
+        "relativeSourcePath":
+            "/home/giorgio/dart-projects/git/vy_translation/lib/src/abstract/translation_abstract.dart",
         "description":
             "The message evidentiate when a value is passed but no placeholder has been found to use it.\nThis could be caused by a wrong message or a wrong list of values in the call",
         "exampleValues": ["2", "File %0 in folder %1"],
@@ -25,7 +26,8 @@ List<Map<String, dynamic>> meme = [
         "originalTerm":
             "Language \"%0\" has not been opened yet. Using default language \"en_US\".",
         "id": "0002",
-        "relativeSourcePath": "lib/src/abstract/translation_abstract.dart",
+        "relativeSourcePath":
+            "/home/giorgio/dart-projects/git/vy_translation/lib/src/abstract/translation_abstract.dart",
         "description":
             "Before calling a translated message, the relative language must be initiated. When this happens the default language is used.",
         "exampleValues": ["it_IT"],
@@ -38,7 +40,8 @@ List<Map<String, dynamic>> meme = [
         "originalLanguageTag": "en-US",
         "originalTerm": "Male version",
         "id": "test-message",
-        "relativeSourcePath": "test/vy_translation_test.dart",
+        "relativeSourcePath":
+            "/home/giorgio/dart-projects/git/vy_translation/test/vy_translation_test.dart",
         "flavorCollections": {
           "MaleFemaleFlavor": ["male", "female"]
         },

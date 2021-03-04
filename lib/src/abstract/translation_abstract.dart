@@ -7,7 +7,7 @@ import 'package:vy_translation/src/annotation/message_definition.dart';
 import 'package:vy_translation/src/translation/translation_finder.dart';
 
 typedef checkModuleFn = Future Function(LanguageTag);
-typedef getTranslationMapFn = Map<String, String> Function(LanguageTag);
+typedef getTranslationMapFn = Map<String, String>? Function(LanguageTag);
 
 @MessageDefinition(
     '0001', 'The placeholder "%%0" in message "%1" has not been found.',
@@ -21,15 +21,15 @@ typedef getTranslationMapFn = Map<String, String> Function(LanguageTag);
     description: 'Before calling a translated message, the relative language '
         'must be initiated. When this happens the default language is used.')
 abstract class TranslationAbstract {
-  static checkModuleFn _checkModule;
-  static getTranslationMapFn _getTranslationMap;
+  static checkModuleFn? _checkModule;
+  static getTranslationMapFn? _getTranslationMap;
   static bool get isInitialized =>
       _checkModule != null && _getTranslationMap != null;
 
   static final log = Logger('TranslationAbstract');
 
-  static LanguageTag _defaultLanguageTag;
-  static LanguageTag _lastTryLanguageTag;
+  static late LanguageTag _defaultLanguageTag;
+  static late LanguageTag _lastTryLanguageTag;
 
   static final List<String> _openedLanguages = <String>[];
 
@@ -82,29 +82,36 @@ abstract class TranslationAbstract {
   /// (in the setPackageMethod function)
   ///
   /// If the language tag is not managed returns null
-  Map<String, String> getTranslationMap(LanguageTag languageTag);
+  Map<String, String>? getTranslationMap(LanguageTag languageTag);
 
   Future<void> _checkModuleSecured(LanguageTag languageTag) async {
     await lock.mutex(() async {
-      await _checkModule(languageTag);
+      if (!isInitialized) {
+        throw StateError('Translator not yet initialized');
+      }
+      // If initialized _checkModule is not null
+      await _checkModule!(languageTag);
     });
   }
 
-  Future<String> retrieveTranslation(LanguageTag languageTag, String tag,
-      {List<String> values}) async {
+  Future<String?> retrieveTranslation(LanguageTag languageTag, String tag,
+      {List<String>? values}) async {
     await _checkModuleSecured(languageTag);
     return get(tag, languageTag: languageTag, values: values);
   }
 
   String get(String tag,
-      {LanguageTag languageTag,
-      List<String> values,
-      Object flavorKeys,
-      bool throwErrorIfMissing}) {
+      {LanguageTag? languageTag,
+      List<String>? values,
+      Object? flavorKeys,
+      bool? throwErrorIfMissing}) {
     throwErrorIfMissing ??= false;
-    languageTag ??= _defaultLanguageTag;
+    var _languageTag = languageTag ?? _defaultLanguageTag;
+    if (!isInitialized) {
+      throw StateError('Translator not yet initialized');
+    }
 
-    Map translationMap;
+    Map? translationMap;
     String flavorTag;
     var hasFlavor = false;
     var flavorKey = '';
@@ -118,56 +125,41 @@ abstract class TranslationAbstract {
       throw ArgumentError('The flavorKeys parameter must be '
           'of type "String" or "List<String>"');
     }
-    if (!isLanguageOpen(languageTag)) {
-      log.warning(finder.get('0002', values: [languageTag.code]));
-      languageTag = LanguageTag('en', region: 'US');
-    }
-
-    String _fetchMessage(LanguageTag languageTag) {
-      String ret;
-      translationMap = _getTranslationMap(languageTag);
-      // In case the truncated tag is not managed.
-      if (translationMap == null) {
-        return ret;
-      }
-      if (hasFlavor && translationMap.containsKey(flavorTag)) {
-        ret = translationMap[flavorTag];
-      }
-      if (unfilled(ret) && translationMap.containsKey(tag)) {
-        ret = translationMap[tag];
-      }
-      return ret;
+    if (!isLanguageOpen(_languageTag)) {
+      log.warning(finder.get('0002', values: [_languageTag.code]));
+      _languageTag = LanguageTag('en', region: 'US');
     }
 
     hasFlavor = filled(flavorKey);
     flavorTag = '$tag.$flavorKey';
 
-    String returnMessage;
-    returnMessage = _fetchMessage(languageTag);
-    /*   Map translationMap = _getTranslationMap(languageTag);
-    if (hasFlavor && translationMap.containsKey(flavorTag)) {
-      returnMessage = translationMap[flavorTag];
+    String? _fetchMessage(LanguageTag languageTag) {
+      String? ret;
+      // If initialized _get TranslationMap is not null
+      translationMap = _getTranslationMap!(languageTag);
+      // In case the truncated tag is not managed.
+      if (translationMap == null) {
+        return ret;
+      }
+      if (hasFlavor && translationMap!.containsKey(flavorTag)) {
+        ret = translationMap![flavorTag];
+      }
+      if (unfilled(ret) && translationMap!.containsKey(tag)) {
+        ret = translationMap![tag];
+      }
+      return ret;
     }
-    if (unfilled(returnMessage) && translationMap.containsKey(tag)) {
-      returnMessage = translationMap[tag];
-    }*/
+
+    //String returnMessage;
+    var returnMessage = _fetchMessage(_languageTag);
+
     if (unfilled(returnMessage)) {
       LanguageTag retry;
-      retry = languageTag;
+      retry = _languageTag;
       while (retry.canBeTruncated) {
         retry = retry.truncated;
         returnMessage = _fetchMessage(retry);
-        /*       translationMap = _getTranslationMap(retry);
-        // In case the truncated tag is not managed.
-        if (translationMap == null) {
-          continue;
-        }
-        if (hasFlavor && translationMap.containsKey(flavorTag)) {
-          returnMessage = translationMap[flavorTag];
-        }
-        if (unfilled(returnMessage) && translationMap.containsKey(tag)) {
-          returnMessage = translationMap[tag];
-        }*/
+
         if (filled(returnMessage)) {
           break;
         }
@@ -176,13 +168,6 @@ abstract class TranslationAbstract {
 
     if (unfilled(returnMessage)) {
       returnMessage = _fetchMessage(_lastTryLanguageTag);
-      /*     translationMap = _getTranslationMap(_lastTryLanguageTag);
-      if (hasFlavor && translationMap.containsKey(flavorTag)) {
-        returnMessage = translationMap[flavorTag];
-      }
-      if (unfilled(returnMessage) && translationMap.containsKey(tag)) {
-        returnMessage = translationMap[tag];
-      }*/
     }
     if (unfilled(returnMessage)) {
       if (throwErrorIfMissing) {
@@ -192,10 +177,10 @@ abstract class TranslationAbstract {
       return '*** <$tag>';
     }
     if (values == null || values.isEmpty) {
-      return returnMessage;
+      return returnMessage!;
     }
 
-    return _mergeMessage(returnMessage, values, languageTag, tag);
+    return _mergeMessage(returnMessage!, values, _languageTag, tag);
   }
 
   /// Receive a message String and inject values, if any
@@ -207,17 +192,19 @@ abstract class TranslationAbstract {
   /// the %1 is the second, and so on.
   String _mergeMessage(String message, List<String> values,
       LanguageTag languageTag, String messageTag) {
-    if (message == null) {
+    /*  if (message.isEmpty) {
       return '';
-    }
-    if (values == null || values.isEmpty) {
-      return message;
-    }
+    } */
     if (message.isEmpty) {
       print(ArgumentError('An empty message has been received for merging'));
     }
+    if (values.isEmpty) {
+      return message;
+    }
 
-    String ret, check = message;
+    String? ret;
+    var check = message;
+
     for (var idx = 0; idx < values.length; idx++) {
       ret = check.replaceAll('%$idx', values[idx]);
       if (ret == check) {
@@ -232,6 +219,6 @@ abstract class TranslationAbstract {
       check = ret;
     }
 
-    return ret;
+    return ret ?? message;
   }
 }

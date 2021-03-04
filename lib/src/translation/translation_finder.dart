@@ -14,7 +14,7 @@ void initTranslationFinder() {
 TranslationFinder get finder => TranslationFinder();
 
 class TranslationFinder extends TranslationAbstract {
-  static TranslationFinder _singleton;
+  static TranslationFinder? _singleton;
 
   TranslationFinder._() : super(LanguageTag.parse('en_US'));
   factory TranslationFinder() {
@@ -56,23 +56,19 @@ class TranslationFinder extends TranslationAbstract {
   }
 
   @override
-  Map<String, String> getTranslationMap(LanguageTag languageTag) {
+  Map<String, String>? getTranslationMap(LanguageTag languageTag) {
     switch (languageTag.posixCode) {
       case 'en_US':
         return translationsEnUs;
-        break;
 
       case 'en_GB':
         return def_translations_en_gb.translationsEnGb;
-        break;
 
       case 'en_CA':
         return def_translations_en_ca.translationsEnCa;
-        break;
 
       case 'en_IN':
         return def_translations_en_in.translationsEnIn;
-        break;
 
       default:
         return null;
@@ -81,11 +77,11 @@ class TranslationFinder extends TranslationAbstract {
 
   @override
   String get(String tag,
-          {LanguageTag languageTag,
-          List<String> values,
-          Object flavorKeys,
-          String project,
-          bool throwErrorIfMissing}) =>
+          {LanguageTag? languageTag,
+          List<String>? values,
+          Object? flavorKeys,
+          String? project,
+          bool? throwErrorIfMissing}) =>
       super.get('${project ?? 'vy_translation'}.$tag',
           languageTag: languageTag,
           values: values,

@@ -19,7 +19,7 @@ import 'export_translations_cmd.dart';
 // could'n find a better way to pass/receive values
 bool errorsReported = false;
 Map<String, MessageStore> store = SplayTreeMap<String, MessageStore>();
-Parameters parms;
+late Parameters parms;
 
 Future<void> extractMessagesCmd(ArgResults argResults) async {
   var current = Directory.current;
@@ -27,21 +27,10 @@ Future<void> extractMessagesCmd(ArgResults argResults) async {
   // loads project name
   var projectName = await extractProjectName(current);
 
-  // *************************
-  // loads vy_translation.yaml
-  /*  var yamlFile = File('${current.path}/vy_translation.yaml');
-  var existsYaml = await yamlFile.exists();
-  if (!existsYaml) {
-    throw StateError('Missing file "vy_translation.yaml" in '
-        'project directory (${current.path})');
-  }
-  YamlMap doc = loadYaml(await yamlFile.readAsString()); */
-  // if .yaml file is empty, loadYaml() returns null;
-
   var vyTranslationMap = await extractVyTranslation(current);
   parms = extractVyTranslationParms(vyTranslationMap, current, projectName);
 
-  await scanMessages(current);
+  await _scanMessages(current);
   if (errorsReported) {
     exit(1);
   }
@@ -49,12 +38,9 @@ Future<void> extractMessagesCmd(ArgResults argResults) async {
       isClean: argResults[parmClean], isReset: argResults[parmReset]);
 
   await exportTranslationsCmd(parms: parms, meme: meme);
-
-  /*  await generateMapFiles(parms, meme);
-  await generateTranslationFinderClass(parms); */
 }
 
-Future<void> scanMessages(Directory project) async {
+Future<void> _scanMessages(Directory project) async {
   var sourceAnalysis = DartSourceAnalysis(AnnotationRetriever(),
       resolvedAnalysis: true, dir: project);
   await sourceAnalysis.run();

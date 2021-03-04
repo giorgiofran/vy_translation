@@ -15,23 +15,27 @@ import '../utils/parameter_management.dart';
 
 // Here the store should contain also other projects.
 Future<Meme> generateMemeFile(Parameters parms, Iterable<MessageStore> store,
-    {bool isClean, bool isReset}) async {
-  isClean ??= false;
-  isReset ??= false;
+    {bool? isClean, bool? isReset}) async {
+  var _isClean = isClean ?? false;
+  var _isReset = isReset ?? false;
+
+  if (parms.memoryDirectory == null) {
+    throw StateError('Memory directory not specified');
+  }
+  var directory = parms.memoryDirectory!;
 
   final _dartFmt = DartFormatter();
 
-  var directory = parms.memoryDirectory;
-
   var targetFile = File('${directory.path}/${parms.packagePrefix}.dart_meme');
 
-  Meme meme, previousMeme;
+  Meme? previousMeme;
+  Meme meme;
   var exists = await targetFile.exists();
   if (!exists) {
     await targetFile.create(recursive: true);
     var newProject = await prepareMemeProject(parms, store);
     meme = Meme()..addProject(newProject);
-  } else if (isReset) {
+  } else if (_isReset) {
     var newProject = await prepareMemeProject(parms, store);
     meme = Meme()..addProject(newProject);
   } else {
@@ -48,7 +52,7 @@ Future<Meme> generateMemeFile(Parameters parms, Iterable<MessageStore> store,
     var oldProject = previousMeme.getProject(newProject.name);
     if (oldProject != null) {
       var mergedProject = newProject.mergeWith(oldProject,
-          onlyIdsInThisProject: isClean, toBeMergedHasPriority: true);
+          onlyIdsInThisProject: _isClean, toBeMergedHasPriority: true);
       meme = Meme()..addProject(mergedProject);
     } else {
       meme = Meme()..addProject(newProject);
@@ -73,24 +77,33 @@ Future<Meme> generateMemeFile(Parameters parms, Iterable<MessageStore> store,
     }
   }
   for (var key in projectMap.keys) {
-    if (!isReset && exists && previousMeme.containsProject(key)) {
-      superProject = projectMap[key].mergeWith(previousMeme.getProject(key),
-          onlyIdsInThisProject: isClean, toBeMergedHasPriority: true);
+    if (projectMap[key] == null || previousMeme == null) {
+      continue;
+    }
+    var project = projectMap[key]!;
+    var previousProject = previousMeme.getProject(key);
+    if (!_isReset && exists && previousProject != null) {
+      superProject = project.mergeWith(previousProject,
+          onlyIdsInThisProject: _isClean, toBeMergedHasPriority: true);
     } else {
-      superProject = projectMap[key];
+      superProject = project;
     }
     meme.addProject(superProject);
   }
   // 3) If a project is present only in previous meme and isClean and isReset
   //    are false, add the old project to the new meme
-  if (exists && !isClean && !isReset) {
+  if (exists && !_isClean && !_isReset) {
     /*   if (previousMeme == null) {
       var previousMemeContent = await targetFile.readAsString();
       previousMeme = Meme.decode(previousMemeContent);
     }*/
-    for (var projectName in previousMeme.projectNames) {
-      if (!meme.containsProject(projectName)) {
-        meme.addProject(previousMeme.getProject(projectName));
+    if (previousMeme != null) {
+      for (var projectName in previousMeme.projectNames) {
+        var previousProject = previousMeme.getProject(projectName);
+
+        if (!meme.containsProject(projectName) && previousProject != null) {
+          meme.addProject(previousProject);
+        }
       }
     }
   }
@@ -103,23 +116,33 @@ Future<Meme> generateMemeFile(Parameters parms, Iterable<MessageStore> store,
 // The file must have been created already
 Future<MemeProject> prepareMemeProject(
     Parameters parms, Iterable<MessageStore> store) async {
+  if (parms.defaultLanguage == null) {
+    throw StateError('Default language not specified');
+  }
+  if (parms.targetLanguages == null) {
+    throw StateError('Target languages not specified');
+  }
+  if (parms.packagePrefix == null) {
+    throw StateError('Package prefix not specified');
+  }
   var header =
-      MemeHeader(parms.defaultLanguage, parms.targetLanguages.toList());
-  var project = MemeProject(parms.packagePrefix);
-  project.header = header;
+      MemeHeader(parms.defaultLanguage!, parms.targetLanguages!.toList());
+  var project = MemeProject(parms.packagePrefix!, header);
+  //project.header = header;
   MemeTerm term;
   for (var message in store) {
-    if (message.definition.id == null) {
+    /* if (message.definition.id == null) {
       throw StateError('Null id in project "${project.name}", '
           'source "${message.sourcePath}"');
-    }
+    } */
     term = MemeTerm(header.originalLanguageTag, message.definition.text,
         message.definition.id,
         flavorCollections: message.definition.flavorCollections,
         originalFlavorTerms: {
-          for (var keyList in message.definition.flavorTextPerKey.keys ?? [])
+          for (var keyList
+              in message.definition.flavorTextPerKey?.keys ?? <List<String>>[])
             keyList.join(FlavorCollection.keySeparator):
-                message.definition.flavorTextPerKey[keyList]
+                message.definition.flavorTextPerKey?[keyList] ?? ''
         })
       ..description = message.definition.description
       ..exampleValues = message.definition.exampleValues
@@ -142,10 +165,19 @@ Future<String> prepareMemeContent(
 }
 
 Future<Map<String, MemeProject>> scanSuperProject(Parameters parms) async {
+  if (parms.memoryDirectory == null) {
+    throw StateError('Memory directory not specified');
+  }
+  if (parms.packagePrefix == null) {
+    throw StateError('Package prefix not specified');
+  }
   var ret = <String, MemeProject>{};
   var packagesMap = await getPackagesMap(parms);
   for (var projectName in packagesMap.keys) {
     var path = packagesMap[projectName];
+    if (path == null) {
+      continue;
+    }
     String dirPath;
     if (path.startsWith('file://')) {
       dirPath = p.fromUri(p.dirname(path));
@@ -163,17 +195,21 @@ Future<Map<String, MemeProject>> scanSuperProject(Parameters parms) async {
 
     YamlMap doc = loadYaml(await vyTranslationYamlFile.readAsString());
     // if .yaml file is empty, loadYaml() returns null;
-    parms =
-        extractVyTranslationParms(doc ?? {}, Directory(dirPath), projectName);
+    parms = extractVyTranslationParms(
+        doc /* ?? {} */, Directory(dirPath), projectName);
 
     var memeFile =
-        File('${parms.memoryDirectory.path}/${parms.packagePrefix}.dart_meme');
+        File('${parms.memoryDirectory!.path}/${parms.packagePrefix}.dart_meme');
     if (!(await memeFile.exists())) {
       throw StateError('Cannot find "meme" file ${memeFile.path}');
     }
     var content = await memeFile.readAsString();
     var projectMeme = Meme.decode(content);
-    ret[parms.packagePrefix] = projectMeme.getProject(parms.packagePrefix);
+    var project = projectMeme.getProject(parms.packagePrefix!);
+    if (project == null) {
+      continue;
+    }
+    ret[parms.packagePrefix!] = project;
   }
   return ret;
 }

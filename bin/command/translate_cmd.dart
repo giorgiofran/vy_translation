@@ -12,9 +12,12 @@ import '../utils/configuration_parameters.dart';
 import '../utils/translate_arguments.dart';
 
 Future<void> translateCmd(Parameters parms, ArgResults args) async {
+  if (parms.memoryDirectory == null) {
+    throw StateError('Memory Directory not specified');
+  }
   final _dartFmt = DartFormatter();
   var targetFile =
-      File('${parms.memoryDirectory.path}/${parms.packagePrefix}.dart_meme');
+      File('${parms.memoryDirectory!.path}/${parms.packagePrefix}.dart_meme');
   var memeString = await targetFile.readAsString();
 
   var meme = Meme.decode(memeString);
@@ -31,26 +34,28 @@ Future<void> translateCmd(Parameters parms, ArgResults args) async {
  */
     for (var projectName in meme.projectNames) {
       var project = meme.getProject(projectName);
-      for (var term in project.terms) {
-        var origin = term.getLanguageTerm(originLanguageTag);
-        var translation = term.getLanguageTerm(languageTag) ?? '';
-        if (filled(translation) && !args[parmShowAll]) {
-          continue;
-        }
+      if (project != null) {
+        for (var term in project.terms) {
+          var origin = term.getLanguageTerm(originLanguageTag);
+          var translation = term.getLanguageTerm(languageTag) ?? '';
+          if (filled(translation) && !args[parmShowAll]) {
+            continue;
+          }
 
-        var processing = true;
-        messageId = term.id;
-        initEditor();
-        editorSet('$origin\n***************\n$translation');
-        editorSetStatusMessage('HELP: Ctrl-Q = quit | Ctrl-F = find');
-        while (processing) {
-          editorRefreshScreen();
-          processing = editorProcessKeypress();
-        }
-        if (isSentenceDirty) {
-          translation = '${sentenceRows.sublist(editorFirstRow).join('\n')}';
+          var processing = true;
+          messageId = term.id;
+          initEditor();
+          editorSet('$origin\n***************\n$translation');
+          editorSetStatusMessage('HELP: Ctrl-Q = quit | Ctrl-F = find');
+          while (processing) {
+            editorRefreshScreen();
+            processing = editorProcessKeypress();
+          }
+          if (isSentenceDirty) {
+            translation = '${sentenceRows.sublist(editorFirstRow).join('\n')}';
 
-          term.insertLanguageTerm(languageTag, translation);
+            term.insertLanguageTerm(languageTag, translation);
+          }
         }
       }
     }

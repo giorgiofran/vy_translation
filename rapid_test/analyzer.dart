@@ -5,9 +5,8 @@ import 'package:analyzer/dart/analysis/analysis_context_collection.dart'
 import 'package:analyzer/dart/analysis/analysis_context.dart'
     show AnalysisContext;
 import 'package:analyzer/dart/analysis/session.dart' show AnalysisSession;
-import 'package:analyzer/dart/analysis/results.dart'
-    show /* ParsedUnitResult, */ ResolvedUnitResult;
-import 'package:analyzer/dart/ast/ast.dart' show Annotation, CompilationUnit;
+import 'package:analyzer/dart/ast/ast.dart'
+    show Annotation, AstNode, CompilationUnit;
 import 'package:analyzer/dart/ast/visitor.dart' show GeneralizingAstVisitor;
 import 'package:analyzer/file_system/physical_file_system.dart'
     show PhysicalResourceProvider;
@@ -83,7 +82,7 @@ Future<void> analyzeAllFiles(AnalysisContextCollection collection) async {
   }
 }
 
-void analyzeSingleFile(AnalysisContext context, String path) async {
+Future<void> analyzeSingleFile(AnalysisContext context, String path) async {
   AnalysisSession session;
   session = context.currentSession;
   //processUnresolvedFile(session, path);
@@ -99,22 +98,20 @@ void analyzeSingleFile(AnalysisContext context, String path) async {
 } */
 
 /// Resolved AST
-void processResolvedFile(AnalysisSession session, String path) async {
-  ResolvedUnitResult result;
-  result = await session.getResolvedUnit(path);
-  CompilationUnit unit;
-  unit = result.unit;
-  unit.accept<void>(AnnotationRetriever());
+Future<void> processResolvedFile(AnalysisSession session, String path) async {
+  var result = await session.getResolvedUnit(path);
+  var unit = result?.unit;
+  unit?.accept<void>(AnnotationRetriever());
 }
 
 class AnnotationRetriever extends GeneralizingAstVisitor<void> {
   @override
   void visitAnnotation(Annotation visitAnnotation) {
-    var parent = visitAnnotation.parent;
-    String string;
+    AstNode? parent = visitAnnotation.parent;
+    String? string;
     while (parent != null) {
       if (parent is CompilationUnit) {
-        string = parent.declaredElement.source.fullName;
+        string = parent.declaredElement?.source.fullName;
         break;
       }
       parent = parent.parent;

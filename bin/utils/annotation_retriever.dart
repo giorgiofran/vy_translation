@@ -6,7 +6,6 @@ import 'package:analyzer/dart/ast/visitor.dart';
 import 'package:analyzer/dart/ast/ast.dart';
 import 'package:analyzer/dart/constant/value.dart';
 import 'package:logging/logging.dart';
-import 'package:analyzer/dart/element/type.dart';
 
 import '../command/extract_messages_cmd.dart' show errorsReported, parms, store;
 import '../extract_messages.dart' show log;
@@ -19,7 +18,7 @@ class AnnotationRetriever extends GeneralizingAstVisitor<void>
     if (visitAnnotation.name.name == 'MessageDefinition') {
       MessageDefinition md;
       md = generateMessageDefinition(visitAnnotation);
-      addToStore(md, sourcePath);
+      addToStore(md, sourcePath ?? 'Unknown');
     }
     super.visitAnnotation(visitAnnotation);
   }
@@ -27,25 +26,31 @@ class AnnotationRetriever extends GeneralizingAstVisitor<void>
   MessageDefinition generateMessageDefinition(Annotation visitAnnotation) {
     //DartObject dartObject;
     var dartObject = visitAnnotation.elementAnnotation
-        .computeConstantValue(); //constantValue;
-    String id = dartConstObjectField(dartObject, 'id');
-
-    String text = dartConstObjectField(dartObject, 'text');
-    String description = dartConstObjectField(dartObject, 'description');
-    List<dynamic> internal = dartConstObjectField(dartObject, 'exampleValues');
-    List<String> exampleValues = internal == null
-        ? internal
+        ?.computeConstantValue(); //constantValue;
+    var id = dartConstObjectField<String>(dartObject, 'id');
+    if (id == null) {
+      throw StateError('Mandatory Id field in Message definition');
+    }
+    var text = dartConstObjectField<String>(dartObject, 'text');
+    if (text == null) {
+      throw StateError(
+          'Translation required for Id field "%id" in Message definition');
+    }
+    var description = dartConstObjectField<String>(dartObject, 'description');
+    var internal = dartConstObjectField<List>(dartObject, 'exampleValues');
+    var exampleValues = internal == null
+        ? null
         : <String>[for (String string in internal) string];
-    List<dynamic> flavors =
+    List<dynamic>? flavors =
         dartConstObjectFieldTranslation(dartObject, 'flavorCollections');
-    Map<dynamic, dynamic> flavorTexts =
-        dartConstObjectField(dartObject, 'flavorTextPerKey');
+    var flavorTexts = dartConstObjectField<Map<dynamic, dynamic>>(
+        dartObject, 'flavorTextPerKey');
 
     return MessageDefinition(id, text,
         description: description,
         exampleValues: exampleValues,
         flavorCollections: <FlavorCollection>[
-          if (flavors != null) ...flavors
+          ...?flavors
         ],
         flavorTextPerKey: <List<String>, String>{
           if (flavorTexts != null)
@@ -56,9 +61,8 @@ class AnnotationRetriever extends GeneralizingAstVisitor<void>
 
   void addToStore(MessageDefinition definition, String sourcePath) {
     var key = '${parms.packagePrefix}.${definition.id}';
-    if (store.containsKey(key)) {
-      MessageStore storeMessage;
-      storeMessage = store[key];
+    if (store[key] != null) {
+      var storeMessage = store[key]!;
       if (definition != storeMessage.definition) {
         if (definition.id == storeMessage.definition.id &&
             definition.text == storeMessage.definition.text) {
@@ -67,7 +71,7 @@ class AnnotationRetriever extends GeneralizingAstVisitor<void>
                 '"${storeMessage.definition.id}" and text '
                 '"${storeMessage.definition.text}" have a different '
                 'description.\nThey come from the following sources:\n'
-                '- ${storeMessage.sourcePath}\n- ${sourcePath}\n'
+                '- ${storeMessage.sourcePath}\n- $sourcePath\n'
                 'Only the first is maintained');
           } else {
             log.warning(
@@ -98,25 +102,25 @@ class AnnotationRetriever extends GeneralizingAstVisitor<void>
 }
 
 dynamic dartConstObjectFieldTranslation(
-    DartObject dartObject, String fieldName) {
+    DartObject? dartObject, String fieldName) {
   if (dartObject == null) {
     return null;
   }
   return dartConstObjectValueTranslation(dartObject.getField(fieldName));
 }
 
-dynamic dartConstObjectValueTranslation(DartObject dartObject) {
+dynamic dartConstObjectValueTranslation(DartObject? dartObject) {
   if (dartObject == null) {
     return null;
   }
-  ParameterizedType fieldType;
-  fieldType = dartObject.type;
+  //ParameterizedType fieldType;
+  var fieldType = dartObject.type;
 
   if (fieldType == null || fieldType.isDartCoreNull) {
     return null;
   } else if (fieldType.toString() == 'List<FlavorCollection>' ||
       '$fieldType' == 'List<FlavorCollection*>*') {
-    List internal = dartObject.toListValue();
+    var internal = dartObject.toListValue();
     if (internal == null) {
       return null;
     }
