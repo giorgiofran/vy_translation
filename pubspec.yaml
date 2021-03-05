@@ -11,7 +11,11 @@ dependencies:
   yaml: ^3.1.0
   recase: ^4.0.0-nullsafety.0
   quiver: 3.0.0
-  dart_style: ^1.3.14
+  dart_style: #^2.0.0
+    git: 
+      url: "https://github.com/dart-lang/dart_style.git"
+      ref: a1d65dd9c4b83c9702ba409465879b94caeb04ea
+
   dart_console: ^1.0.0
   vy_lock: #^1.6.0
     git:
