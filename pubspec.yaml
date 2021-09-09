@@ -2,9 +2,10 @@ name: vy_translation
 description: A way to manage message translations even from other packages (that use vy_translation ...)
 version: 0.2.4
 homepage: https://github.com/giorgiofran/vy_translation
+publish_to: none
 
 environment:
-  sdk: '>=2.7.1 <3.0.0'
+  sdk: '>=2.9.0 <3.0.0'
 
 dependencies:
   yaml: any
