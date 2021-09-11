@@ -5,6 +5,8 @@ import 'package:analyzer/dart/analysis/analysis_context_collection.dart'
 import 'package:analyzer/dart/analysis/analysis_context.dart'
     show AnalysisContext;
 import 'package:analyzer/dart/analysis/session.dart' show AnalysisSession;
+import 'package:analyzer/dart/analysis/results.dart' show ResolvedUnitResult;
+
 import 'package:analyzer/dart/ast/ast.dart'
     show Annotation, AstNode, CompilationUnit;
 import 'package:analyzer/dart/ast/visitor.dart' show GeneralizingAstVisitor;
@@ -99,8 +101,8 @@ Future<void> analyzeSingleFile(AnalysisContext context, String path) async {
 
 /// Resolved AST
 Future<void> processResolvedFile(AnalysisSession session, String path) async {
-  var result = await session.getResolvedUnit(path);
-  var unit = result?.unit;
+  var result = await session.getResolvedUnit2(path);
+  var unit = (result as ResolvedUnitResult).unit;
   unit?.accept<void>(AnnotationRetriever());
 }
 
