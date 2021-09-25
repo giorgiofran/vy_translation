@@ -90,6 +90,9 @@ String stringifyMapContent(Map<String, String> languageMap) {
     for (var part in parts) {
       if (part != parts.first) {
         buffer.write('    ');
+      } else if (part == ' ') {
+        buffer.writeln('');
+        continue;
       }
       containsSingle = part.contains("'");
       containsDouble = part.contains('"');
