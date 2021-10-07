@@ -17,7 +17,7 @@ dependencies:
     git:
       url: "https://github.com/giorgiofran/vy_lock"
 
-  vy_language_tag: ^0.1.3
+  #vy_language_tag: ^0.2.0
 
   vy_analyzer_utils:
     git:
